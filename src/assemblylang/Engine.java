@@ -49,13 +49,20 @@ public final class Engine {
 	private boolean isExit = false;
 
 	public boolean isOutError = true;
-
+	
+	/**
+	 * Constructor
+	 * @param Register(variable)size
+	 */
 	public Engine(int regCount) {
 		initRegMap(regCount);
 		commandRegister();
 		init();
 	}
-
+	
+	/**
+	 * Register a CommandMap
+	 */
 	private void commandRegister() {
 		//calc
 		commands.put("ADD", new CommandADD());//addition
@@ -79,7 +86,12 @@ public final class Engine {
 	private void init() {
 
 	}
-
+	
+	/**
+	 * running code one line
+	 * @param code
+	 * @return result
+	 */
 	public int run(String code) {
 		this.isRunningNow = true;
 		if (code.contains("#")) {
@@ -169,7 +181,12 @@ public final class Engine {
 
 		return result;
 	}
-
+	
+	/**
+	 * running code multi line
+	 * @param codes
+	 * @return result
+	 */
 	public int[] run(String[] codes) {
 		this.codeLen = codes.length;
 		int[] results = new int[codes.length];
@@ -184,13 +201,24 @@ public final class Engine {
 		this.codeLen = 0;
 		return results;
 	}
-
+	
+	/**
+	 * running command import from text file
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	public int[] run(File file) throws IOException {
 		String[] codes = FileUtils.readLines(file, StandardCharsets.UTF_8).toArray(new String[0]);
 		int[] results = this.run(codes);
 		return results;
 	}
-
+	
+	/**
+	 * throw error
+	 * @param errorMessage
+	 * @param errorLine
+	 */
 	public void throwError(String errorMessage, int errorLine) {
 		if (this.isOutError)
 			System.out.println("Error:" + errorMessage + "\nCode:" + code + "\nLine:" + errorLine);
@@ -201,6 +229,10 @@ public final class Engine {
 		this.isRunningNow = false;
 	}
 
+	/**
+	 * throw error
+	 * @param errorMessage
+	 */
 	public void throwError(String errorMessage) {
 		this.throwError(errorMessage, this.getReg("C"));
 	}
@@ -216,11 +248,19 @@ public final class Engine {
 	public int getLastErrorLine() {
 		return this.lastErrorLine;
 	}
-
+	
+	/**
+	 * get error_message + error_code + error_line string
+	 * @return result
+	 */
 	public String getAllLastError() {
 		return "Error:" + this.lastErrorMessage + "\nCode:" + this.lastErrorCode + "\nLine:" + this.lastErrorLine;
 	}
-
+	
+	/**
+	 * goto
+	 * @param index
+	 */
 	public void Goto(int index) {
 		if (index <= this.codeLen) {
 			this.setReg("C", index);
@@ -229,7 +269,10 @@ public final class Engine {
 			this.throwError("The number of lines of code specified does not exist.");
 		}
 	}
-
+	
+	/**
+	 * exiting
+	 */
 	public void Exit() {
 		this.isExit = true;
 		this.isRunningNow = false;
@@ -267,7 +310,14 @@ public final class Engine {
 		}
 		return outarr;
 	}
-
+	
+	/**
+	 * replace_key_word True = 1 False = 0 Null = 0 Nil = 0 None = 0 Void = 0
+	 * @param strarr
+	 * @param convlocation
+	 * @param command
+	 * @return
+	 */
 	private String[] replaceKeyWord(String[] strarr, int[] convlocation, String command) {
 		for (int i = 0; i < strarr.length; i++) {
 			if (ArrayUtils.contains(convlocation, i)) {
@@ -290,11 +340,21 @@ public final class Engine {
 		return strarr;
 
 	}
-
+	
+	/**
+	 * set reg using reg index
+	 * @param index
+	 * @param value
+	 */
 	public void setReg(int index, int value) {
 		this.setReg(this.toRegName(index), value);
 	}
-
+	
+	/**
+	 * get reg using reg index
+	 * @param index
+	 * @return
+	 */
 	public int getReg(int index) {
 		return this.getReg(this.toRegName(index));
 	}
@@ -327,15 +387,30 @@ public final class Engine {
 	public boolean hasRegName(String str) {
 		return this.Regs.containsKey(str);
 	}
-
+	
+	/**
+	 * reg index to reg name
+	 * @param regindex
+	 * @return
+	 */
 	public String toRegName(int regindex) {
 		return this.RegNames.get(regindex);
 	}
-
+	
+	/**
+	 * set reg changeable
+	 * @param Reg
+	 * @param value
+	 */
 	public void setRegChange(String Reg, boolean value) {
 		this.setRegSetting(Reg, 1, value);
 	}
-
+	
+	/**
+	 * set reg referable
+	 * @param Reg
+	 * @param value
+	 */
 	public void setRegReference(String Reg, boolean value) {
 		this.setRegSetting(Reg, 0, value);
 	}
@@ -345,11 +420,21 @@ public final class Engine {
 		boollist[index] = value;
 		this.RegSetting.put(Reg, ArrayUtils.toObject(boollist));
 	}
-
+	
+	/**
+	 * get reg changeable
+	 * @param Reg
+	 * @param value
+	 */
 	public boolean getRegChange(String Reg) {
 		return this.RegSetting.get(Reg)[1];
 	}
 
+	/**
+	 * get reg referable
+	 * @param Reg
+	 * @param value
+	 */
 	public boolean getRegReference(String Reg) {
 		return this.RegSetting.get(Reg)[0];
 	}
@@ -373,25 +458,46 @@ public final class Engine {
 		this.setRegChange("OP", false);
 		//this.setRegChange("C", false);
 	}
-
+	
+	/**
+	 * add new register
+	 * @param RegName
+	 * @param defaultValue
+	 */
 	public void addReg(String RegName, int defaultValue) {
 		this.Regs.put(RegName, defaultValue);
 		this.RegNames.add(RegName);
 		this.RegSetting.put(RegName, new Boolean[] { true, true }); //参照可能か　変更可能か
 	}
-
+	
+	/**
+	 * add new register
+	 * @param RegName
+	 */
 	public void addReg(String RegName) {
 		this.addReg(RegName, 0);
 	}
-
+	
+	/**
+	 * add command
+	 * @param commandName
+	 * @param command
+	 */
 	public void addCommand(String commandName, ICommand command) {
 		this.commands.put(commandName, command);
 	}
-
+	
+	/**
+	 * remove command
+	 * @param commandName
+	 */
 	public void removeCommand(String commandName) {
 		this.commands.remove(commandName);
 	}
-
+	
+	/**
+	 * set command registry default
+	 */
 	public void resetDefaultCommand() {
 		this.commands.clear();
 		this.commandRegister();
