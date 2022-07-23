@@ -5,3 +5,4 @@ DSP OPR
 EQRL 7 OPR 100
 GOTO 2
 EXIT
+#this program is display a 1~100 num
