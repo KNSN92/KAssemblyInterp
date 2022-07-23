@@ -58,7 +58,7 @@ public final class Engine {
 
 	private void commandRegister() {
 		//calc
-		commands.put("ADD", new CommandADD()); //addition
+		commands.put("ADD", new CommandADD());//addition
 		commands.put("SUB", new CommandSUB());//subtraction
 		commands.put("MLT", new CommandMLT());//multiplication
 		commands.put("DIV", new CommandDIV());//division
@@ -99,18 +99,14 @@ public final class Engine {
 		code = code.toUpperCase();
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
-		if (!commands.containsKey(StrArr[0])) {
+		if (commands.containsKey(StrArr[0])) {
+		} else {
 			boolean isFoundEndCommand = false;
 			for (ICommand command : commands.values()) {
-				if (command instanceof IEncloseCommand) {
-					if (StrArr[0].equals(((IEncloseCommand) command).getEndEncloseCommand())
-							& this.commandMultiLineCount[this.commandMultiLineCount.length - 1]
-									.equals(((IEncloseCommand) command).getEndEncloseCommand())) {
-
-					}
+				if(command instanceof IEncloseCommand) {
+					
 				}
 			}
-		} else {
 			throwError("\"" + commandname + "\"Command not found.");
 		}
 		commandname = StrArr[0];
