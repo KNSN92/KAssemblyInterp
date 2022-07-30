@@ -4,9 +4,9 @@ import java.util.Map;
 
 public interface ICommand {
 	
-	public int runCommand(int[]input, Engine engine, Map<String,?> customValueMap);
+	public int runCommand(int[]input, Engine engine, Map<String,?> customValueMap, int argCount);
 	
-	public boolean isRunnable(int[]input, Engine engine, Map<String,?> customValueMap);
+	public boolean isRunnable(int[]input, Engine engine, Map<String,?> customValueMap, int argCount);
 	
 	public int[] getArgCounts();
 	
@@ -18,7 +18,7 @@ public interface ICommand {
 		return 1;
 	}
 	
-	default public String[] getInitResult(String[] args, Engine engine) {
+	default public String[] getInitResult(String[] args, Engine engine, Map<String,?> customValueMap, int argCount) {
 		return args;
 	}
 }
