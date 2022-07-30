@@ -8,13 +8,13 @@ import assemblylang.ICommand;
 public class CommandSET implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap) {
+	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		engine.setReg(input[0], input[1]);
 		return 0;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap) {
+	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		return true;
 	}
 

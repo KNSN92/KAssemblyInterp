@@ -11,7 +11,7 @@ import assemblylang.ICommand;
 public class CommandDSP implements ICommand {
 
 	@Override
-	public int runCommand(int[]input, Engine engine, Map<String, ?> customValueMap) {
+	public int runCommand(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		String printStr = StringUtils.join(ArrayUtils.toObject(input), " ");
 		System.out.println(printStr);
 		return 0;
@@ -23,7 +23,7 @@ public class CommandDSP implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[]input, Engine engine, Map<String, ?> customValueMap) {
+	public boolean isRunnable(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		return true;
 	}
 

@@ -8,7 +8,7 @@ import assemblylang.ICommand;
 public class CommandMLT implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap) {
+	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		int result = 1;
 		for(int in:input) {
 			result *= in;
@@ -17,7 +17,7 @@ public class CommandMLT implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap) {
+	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
 		return true;
 	}
 
