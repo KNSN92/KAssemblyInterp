@@ -13,6 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import assemblylang.commands.CommandABS;
 import assemblylang.commands.CommandADD;
 import assemblylang.commands.CommandDIV;
 import assemblylang.commands.CommandDSP;
@@ -22,9 +23,11 @@ import assemblylang.commands.CommandGOTO;
 import assemblylang.commands.CommandMLT;
 import assemblylang.commands.CommandMOD;
 import assemblylang.commands.CommandMOV;
+import assemblylang.commands.CommandPOW;
 import assemblylang.commands.CommandSET;
 import assemblylang.commands.CommandSUB;
 import assemblylang.commands.CommandSWP;
+import assemblylang.commands.CommandVAR;
 
 public final class Engine {
 
@@ -34,7 +37,7 @@ public final class Engine {
 	private Map<String, Integer> RegIDs = new HashMap<>();
 	private Map<String, ICommand> commands = new HashMap<>();
 	private String[] commandMultiLineCount = new String[0];
-	private Map<String,Map<String,?>> allCustomValueMap = new HashMap<>();
+	private Map<String, Map<String, ?>> allCustomValueMap = new HashMap<>();
 
 	private String code = "";
 	private String commandname = "";
@@ -49,7 +52,7 @@ public final class Engine {
 	private boolean isExit = false;
 
 	public boolean isOutError = true;
-	
+
 	/**
 	 * Constructor
 	 * @param Register(variable)size
@@ -59,7 +62,7 @@ public final class Engine {
 		commandRegister();
 		init();
 	}
-	
+
 	/**
 	 * Register a CommandMap
 	 */
@@ -70,12 +73,15 @@ public final class Engine {
 		commands.put("MLT", new CommandMLT());//multiplication
 		commands.put("DIV", new CommandDIV());//division
 		commands.put("MOD", new CommandMOD());//mod
+		commands.put("ABS", new CommandABS());//abs
+		commands.put("POW", new CommandPOW());//pow
 		//display
 		commands.put("DSP", new CommandDSP());//display(print)
 		//register
 		commands.put("SET", new CommandSET());//reg set
 		commands.put("MOV", new CommandMOV());//reg value move
 		commands.put("SWP", new CommandSWP());//reg value swap
+		commands.put("VAR", new CommandVAR());
 		//control
 		commands.put("GOTO", new CommandGOTO());//goto
 		commands.put("EXIT", new CommandEXIT());//exit
@@ -86,7 +92,7 @@ public final class Engine {
 	private void init() {
 
 	}
-	
+
 	/**
 	 * running code one line
 	 * @param code
@@ -107,6 +113,10 @@ public final class Engine {
 				code = code.substring(0, code.indexOf("#"));
 			}
 		}
+		if(code.length() <= 0) {
+			this.setReg("C", this.getReg("C") + 1);
+			return 0;
+		}
 		this.code = code;
 		code = code.toUpperCase();
 		code = StringUtils.trim(code);
@@ -115,22 +125,25 @@ public final class Engine {
 		} else {
 			boolean isFoundEndCommand = false;
 			for (ICommand command : commands.values()) {
-				if(command instanceof IEncloseCommand) {
-					
+				if (command instanceof IEncloseCommand) {
+
 				}
 			}
 			throwError("\"" + commandname + "\"Command not found.");
 		}
 		commandname = StrArr[0];
 		ICommand command = commands.get(commandname);
-		StrArr = command.getInitResult(StrArr, this);
+		StrArr = command.getInitResult(ArrayUtils.subarray(StrArr, 1, StrArr.length), this,
+				this.allCustomValueMap.get(commandname), StrArr.length-1);
+		StrArr = ArrayUtils.insert(0,StrArr,commandname);
 
 		if (isExit) {
 			this.isRunningNow = false;
-			return -1;
+			this.setReg("C", this.getReg("C") + 1);
+			return 0;
 		}
-
-		int[] IntArr = this.extractArgAndToIntAndCheck(StrArr, command.getNoConversionLocations());
+		
+		int[] IntArr = this.extractArgAndToIntAndCheck(StrArr, command.getNoConversionLocations());//
 		
 		if (!ArrayUtils.contains(command.getArgCounts(), IntArr.length) &
 				!(command.getArgCounts() == null)) {
@@ -142,23 +155,25 @@ public final class Engine {
 
 		if (isExit) {
 			this.isRunningNow = false;
-			return -1;
+			this.setReg("C", this.getReg("C") + 1);
+			return 0;
 		}
 
 		int result = 0;
 		if (command instanceof IEncloseCommand) {
 			if (commandname.equals(((IEncloseCommand) command).getEndEncloseCommand())) {
-				result = ((IEncloseCommand) command).runEndEncloseCommand(IntArr, this, this.allCustomValueMap);
+				result = ((IEncloseCommand) command).runEndEncloseCommand(IntArr, this, this.allCustomValueMap, IntArr.length);
 			} else {
-				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname));
+				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
 			}
 		} else {
-			result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname));
+			result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
 		}
 
 		if (isExit) {
 			this.isRunningNow = false;
-			return -1;
+			this.setReg("C", this.getReg("C") + 1);
+			return 0;
 		}
 
 		if (isGoto) {
@@ -181,7 +196,7 @@ public final class Engine {
 
 		return result;
 	}
-	
+
 	/**
 	 * running code multi line
 	 * @param codes
@@ -192,7 +207,14 @@ public final class Engine {
 		int[] results = new int[codes.length];
 		while (this.getReg("C") <= codes.length) {
 			int result = 0;
-			result = this.run(codes[this.getReg("C") - 1]);
+			try {
+				result = this.run(codes[this.getReg("C") - 1]);
+			} catch (Exception e) {
+				System.out.println("Oh my god...\n" + "It looks like an error occurred in java.");
+				System.out.println("Error:" + "\nLine:" + this.getReg("C"));
+				e.printStackTrace();
+				System.exit(0);
+			}
 			ArrayUtils.add(results, result);
 			if (isExit) {
 				break;
@@ -201,7 +223,7 @@ public final class Engine {
 		this.codeLen = 0;
 		return results;
 	}
-	
+
 	/**
 	 * running command import from text file
 	 * @param file
@@ -213,7 +235,7 @@ public final class Engine {
 		int[] results = this.run(codes);
 		return results;
 	}
-	
+
 	/**
 	 * throw error
 	 * @param errorMessage
@@ -248,7 +270,7 @@ public final class Engine {
 	public int getLastErrorLine() {
 		return this.lastErrorLine;
 	}
-	
+
 	/**
 	 * get error_message + error_code + error_line string
 	 * @return result
@@ -256,20 +278,20 @@ public final class Engine {
 	public String getAllLastError() {
 		return "Error:" + this.lastErrorMessage + "\nCode:" + this.lastErrorCode + "\nLine:" + this.lastErrorLine;
 	}
-	
+
 	/**
 	 * goto
 	 * @param index
 	 */
 	public void Goto(int index) {
-		if (index <= this.codeLen) {
+		if (index <= this.codeLen & index >= 1) {
 			this.setReg("C", index);
 			this.isGoto = true;
 		} else {
 			this.throwError("The number of lines of code specified does not exist.");
 		}
 	}
-	
+
 	/**
 	 * exiting
 	 */
@@ -281,7 +303,7 @@ public final class Engine {
 	private int[] extractArgAndToIntAndCheck(String[] strarr, int[] convlocation) {
 		strarr = ArrayUtils.subarray(strarr, 1, strarr.length);
 		strarr = this.replaceKeyWord(strarr, convlocation, this.commandname);
-
+		
 		for (int i = 0; i < strarr.length; i++) {
 			if (Regs.containsKey(strarr[i])) {
 				if (this.getRegReference(strarr[i])) {
@@ -310,7 +332,7 @@ public final class Engine {
 		}
 		return outarr;
 	}
-	
+
 	/**
 	 * replace_key_word True = 1 False = 0 Null = 0 Nil = 0 None = 0 Void = 0
 	 * @param strarr
@@ -340,7 +362,7 @@ public final class Engine {
 		return strarr;
 
 	}
-	
+
 	/**
 	 * set reg using reg index
 	 * @param index
@@ -349,7 +371,7 @@ public final class Engine {
 	public void setReg(int index, int value) {
 		this.setReg(this.toRegName(index), value);
 	}
-	
+
 	/**
 	 * get reg using reg index
 	 * @param index
@@ -387,7 +409,7 @@ public final class Engine {
 	public boolean hasRegName(String str) {
 		return this.Regs.containsKey(str);
 	}
-	
+
 	/**
 	 * reg index to reg name
 	 * @param regindex
@@ -396,7 +418,7 @@ public final class Engine {
 	public String toRegName(int regindex) {
 		return this.RegNames.get(regindex);
 	}
-	
+
 	/**
 	 * set reg changeable
 	 * @param Reg
@@ -405,7 +427,7 @@ public final class Engine {
 	public void setRegChange(String Reg, boolean value) {
 		this.setRegSetting(Reg, 1, value);
 	}
-	
+
 	/**
 	 * set reg referable
 	 * @param Reg
@@ -420,7 +442,7 @@ public final class Engine {
 		boollist[index] = value;
 		this.RegSetting.put(Reg, ArrayUtils.toObject(boollist));
 	}
-	
+
 	/**
 	 * get reg changeable
 	 * @param Reg
@@ -458,7 +480,7 @@ public final class Engine {
 		this.setRegChange("OP", false);
 		//this.setRegChange("C", false);
 	}
-	
+
 	/**
 	 * add new register
 	 * @param RegName
@@ -469,7 +491,7 @@ public final class Engine {
 		this.RegNames.add(RegName);
 		this.RegSetting.put(RegName, new Boolean[] { true, true }); //参照可能か　変更可能か
 	}
-	
+
 	/**
 	 * add new register
 	 * @param RegName
@@ -477,7 +499,7 @@ public final class Engine {
 	public void addReg(String RegName) {
 		this.addReg(RegName, 0);
 	}
-	
+
 	/**
 	 * add command
 	 * @param commandName
@@ -486,7 +508,7 @@ public final class Engine {
 	public void addCommand(String commandName, ICommand command) {
 		this.commands.put(commandName, command);
 	}
-	
+
 	/**
 	 * remove command
 	 * @param commandName
@@ -494,7 +516,7 @@ public final class Engine {
 	public void removeCommand(String commandName) {
 		this.commands.remove(commandName);
 	}
-	
+
 	/**
 	 * set command registry default
 	 */
