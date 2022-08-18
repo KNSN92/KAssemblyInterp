@@ -32,9 +32,4 @@ public class CommandDSP implements ICommand {
 		return null;
 	}
 
-	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
-
 }

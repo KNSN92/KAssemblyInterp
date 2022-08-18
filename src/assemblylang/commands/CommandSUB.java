@@ -33,12 +33,6 @@ public class CommandSUB implements ICommand {
 	public String getReturnRegName() {
 		return "OP";
 	}
-
-
-	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
 	
 	@Override
 	public int getMinArgCount() {

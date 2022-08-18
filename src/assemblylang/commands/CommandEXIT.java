@@ -29,11 +29,6 @@ public class CommandEXIT implements ICommand {
 	}
 
 	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
-
-	@Override
 	public int getMinArgCount() {
 		return 0;
 	}

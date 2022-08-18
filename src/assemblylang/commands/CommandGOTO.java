@@ -28,9 +28,4 @@ public class CommandGOTO implements ICommand{
 		return null;
 	}
 
-	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
-
 }

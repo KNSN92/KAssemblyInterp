@@ -27,9 +27,4 @@ public class CommandABS implements ICommand {
 		return "OP";
 	}
 
-	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
-
 }

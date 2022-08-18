@@ -12,10 +12,12 @@ public interface ICommand {
 	
 	public String getReturnRegName();
 	
-	public int[] getNoConversionLocations();
+	default public int[] getNoConversionLocations() {
+		return null;
+	}
 	
 	default public int getMinArgCount() {
-		return 1;
+		return 0;
 	}
 	
 	default public String[] getInitResult(String[] args, Engine engine, Map<String,?> customValueMap, int argCount) {

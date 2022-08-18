@@ -27,9 +27,4 @@ public class CommandPOW implements ICommand {
 		return "OP";
 	}
 
-	@Override
-	public int[] getNoConversionLocations() {
-		return null;
-	}
-
 }
