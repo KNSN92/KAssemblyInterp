@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import assemblylang.Engine;
 
+@Deprecated
 public final class SyntaxChecker {
 
 	private List<Triple<String[], CommandFunction<String[]>, Boolean>> Syntaxs = new ArrayList<>();
