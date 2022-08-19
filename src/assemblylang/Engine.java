@@ -13,6 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import assemblylang.commands.Command0401;
 import assemblylang.commands.CommandABS;
 import assemblylang.commands.CommandADD;
 import assemblylang.commands.CommandDIV;
@@ -39,12 +40,12 @@ public final class Engine {
 	private String[] commandMultiLineCount = new String[0];
 	private Map<String, Map<String, ?>> allCustomValueMap = new HashMap<>();
 
-	private String code = "";
-	private String commandname = "";
+	private String code = ""; 
+	private String commandname = ""; 
 	private int codeLen = 0;
 
-	private String lastErrorMessage = "";
-	private String lastErrorCode = "";
+	private String lastErrorMessage = ""; 
+	private String lastErrorCode = ""; 
 	private int lastErrorLine = 0;
 
 	private boolean isRunningNow = false;
@@ -52,6 +53,7 @@ public final class Engine {
 	private boolean isExit = false;
 
 	public boolean isOutError = true;
+	public String[] NGWordList = { "TRUE", "FALSE", "NULL", "NIL", "NONE", "VOID", "CONST", "FINAL" }; 
 
 	/**
 	 * Constructor
@@ -68,25 +70,25 @@ public final class Engine {
 	 */
 	private void commandRegister() {
 		//calc
-		commands.put("ADD", new CommandADD());//addition
-		commands.put("SUB", new CommandSUB());//subtraction
-		commands.put("MLT", new CommandMLT());//multiplication
-		commands.put("DIV", new CommandDIV());//division
-		commands.put("MOD", new CommandMOD());//mod
-		commands.put("ABS", new CommandABS());//abs
-		commands.put("POW", new CommandPOW());//pow
+		commands.put("ADD", new CommandADD());//addition 
+		commands.put("SUB", new CommandSUB());//subtraction 
+		commands.put("MLT", new CommandMLT());//multiplication 
+		commands.put("DIV", new CommandDIV());//division 
+		commands.put("MOD", new CommandMOD());//mod 
+		commands.put("ABS", new CommandABS());//abs 
+		commands.put("POW", new CommandPOW());//pow 
 		//display
-		commands.put("DSP", new CommandDSP());//display(print)
+		commands.put("DSP", new CommandDSP());//display(print) 
 		//register
-		commands.put("SET", new CommandSET());//reg set
-		commands.put("MOV", new CommandMOV());//reg value move
-		commands.put("SWP", new CommandSWP());//reg value swap
-		commands.put("VAR", new CommandVAR());
+		commands.put("SET", new CommandSET());//reg set 
+		commands.put("MOV", new CommandMOV());//reg value move 
+		commands.put("SWP", new CommandSWP());//reg value swap 
+		commands.put("VAR", new CommandVAR()); //new variable
 		//control
-		commands.put("GOTO", new CommandGOTO());//goto
-		commands.put("EXIT", new CommandEXIT());//exit
+		commands.put("GOTO", new CommandGOTO());//goto 
+		commands.put("EXIT", new CommandEXIT());//exit 
 		//condition
-		commands.put("EQRL", new CommandEQRL());//equal
+		commands.put("EQRL", new CommandEQRL());//equal 
 	}
 
 	private void init() {
@@ -99,8 +101,13 @@ public final class Engine {
 	 * @return result
 	 */
 	public int run(String code) {
+		
+		if(code.contains("\n")) {
+			this.run(code.split("\n"));
+		}
+		
 		this.isRunningNow = true;
-		if (code.contains("#")) {
+		if (code.contains("#")) { 
 			int hashcount = 0;
 			for (char Char : code.toCharArray()) {
 				if (Char == '#') {
@@ -108,13 +115,13 @@ public final class Engine {
 				}
 			}
 			if (hashcount >= 2) {
-				code = code.substring(0, code.indexOf("#")) + code.substring(code.lastIndexOf("#") + 1);
+				code = code.substring(0, code.indexOf("#")) + code.substring(code.lastIndexOf("#") + 1); 
 			} else {
-				code = code.substring(0, code.indexOf("#"));
+				code = code.substring(0, code.indexOf("#")); 
 			}
 		}
-		if(code.length() <= 0) {
-			this.setReg("C", this.getReg("C") + 1);
+		if (code.length() <= 0) {
+			this.setReg("C", this.getReg("C") + 1); 
 			return 0;
 		}
 		this.code = code;
@@ -129,57 +136,67 @@ public final class Engine {
 
 				}
 			}
-			throwError("\"" + commandname + "\"Command not found.");
+			throwError("Command not found."); 
 		}
 		commandname = StrArr[0];
 		ICommand command = commands.get(commandname);
 		StrArr = command.getInitResult(ArrayUtils.subarray(StrArr, 1, StrArr.length), this,
-				this.allCustomValueMap.get(commandname), StrArr.length-1);
-		StrArr = ArrayUtils.insert(0,StrArr,commandname);
+				this.allCustomValueMap.get(commandname), StrArr.length - 1);
+		StrArr = ArrayUtils.insert(0, StrArr, commandname);
 
 		if (isExit) {
 			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
+			this.setReg("C", this.getReg("C") + 1); 
 			return 0;
 		}
-		
+
 		int[] IntArr = this.extractArgAndToIntAndCheck(StrArr, command.getNoConversionLocations());//
 		
+		if (isExit) {
+			this.isRunningNow = false;
+			this.setReg("C", this.getReg("C") + 1); 
+			return 0;
+		}
+
 		if (!ArrayUtils.contains(command.getArgCounts(), IntArr.length) &
 				!(command.getArgCounts() == null)) {
-			throwError("The number of arguments does not match the number of values set.", this.getReg("C"));
-		}
-		if (IntArr.length < command.getMinArgCount()) {
-			throwError("The number of arguments does not match the number of values set.", this.getReg("C"));
+			throwError("The number of arguments does not match the number of values set.", this.getReg("C")); 
+		}else if (IntArr.length < command.getMinArgCount()) {
+			throwError("The number of arguments does not match the number of values set.", this.getReg("C")); 
 		}
 
 		if (isExit) {
 			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
+			this.setReg("C", this.getReg("C") + 1); 
 			return 0;
 		}
 
 		int result = 0;
 		if (command instanceof IEncloseCommand) {
 			if (commandname.equals(((IEncloseCommand) command).getEndEncloseCommand())) {
-				result = ((IEncloseCommand) command).runEndEncloseCommand(IntArr, this, this.allCustomValueMap, IntArr.length);
+				result = ((IEncloseCommand) command).runEndEncloseCommand(IntArr, this, this.allCustomValueMap,
+						IntArr.length);
 			} else {
 				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
 			}
 		} else {
-			result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
+			if (command.isRunnable(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length)) {
+				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
+			}else {
+				throwError("Command not found.");
+			}
 		}
 
 		if (isExit) {
 			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
+			this.setReg("C", this.getReg("C") + 1); 
 			return 0;
 		}
 
 		if (isGoto) {
 			this.isGoto = false;
 		} else {
-			this.setReg("C", this.getReg("C") + 1);
+			this.setReg("C", this.getReg("C") + 1); 
 		}
 
 		if (command.getReturnRegName() == null) {
@@ -188,8 +205,8 @@ public final class Engine {
 			this.Regs.put(command.getReturnRegName(), result);
 		}
 
-		this.code = "";
-		this.commandname = "";
+		this.code = ""; 
+		this.commandname = ""; 
 		this.isGoto = false;
 		this.isExit = false;
 		this.isRunningNow = false;
@@ -205,13 +222,13 @@ public final class Engine {
 	public int[] run(String[] codes) {
 		this.codeLen = codes.length;
 		int[] results = new int[codes.length];
-		while (this.getReg("C") <= codes.length) {
+		while (this.getReg("C") <= codes.length) { 
 			int result = 0;
 			try {
-				result = this.run(codes[this.getReg("C") - 1]);
+				result = this.run(codes[this.getReg("C") - 1]); 
 			} catch (Exception e) {
-				System.out.println("Oh my god...\n" + "It looks like an error occurred in java.");
-				System.out.println("Error:" + "\nLine:" + this.getReg("C"));
+				System.out.println("Oh my god...\n" + "It looks like an error occurred in java."); 
+				System.out.println("Error:" + "\nLine:" + this.getReg("C")); 
 				e.printStackTrace();
 				System.exit(0);
 			}
@@ -243,7 +260,7 @@ public final class Engine {
 	 */
 	public void throwError(String errorMessage, int errorLine) {
 		if (this.isOutError)
-			System.out.println("Error:" + errorMessage + "\nCode:" + code + "\nLine:" + errorLine);
+			System.out.println("Error:" + errorMessage + "\nCode:" + code + "\nLine:" + errorLine); 
 		this.lastErrorMessage = errorMessage;
 		this.lastErrorCode = this.code;
 		this.lastErrorLine = errorLine;
@@ -256,7 +273,7 @@ public final class Engine {
 	 * @param errorMessage
 	 */
 	public void throwError(String errorMessage) {
-		this.throwError(errorMessage, this.getReg("C"));
+		this.throwError(errorMessage, this.getReg("C")); 
 	}
 
 	public String getLastErrorMessage() {
@@ -276,7 +293,7 @@ public final class Engine {
 	 * @return result
 	 */
 	public String getAllLastError() {
-		return "Error:" + this.lastErrorMessage + "\nCode:" + this.lastErrorCode + "\nLine:" + this.lastErrorLine;
+		return "Error:" + this.lastErrorMessage + "\nCode:" + this.lastErrorCode + "\nLine:" + this.lastErrorLine; 
 	}
 
 	/**
@@ -285,10 +302,10 @@ public final class Engine {
 	 */
 	public void Goto(int index) {
 		if (index <= this.codeLen & index >= 1) {
-			this.setReg("C", index);
+			this.setReg("C", index); 
 			this.isGoto = true;
 		} else {
-			this.throwError("The number of lines of code specified does not exist.");
+			this.throwError("The number of lines of code specified does not exist."); 
 		}
 	}
 
@@ -303,7 +320,7 @@ public final class Engine {
 	private int[] extractArgAndToIntAndCheck(String[] strarr, int[] convlocation) {
 		strarr = ArrayUtils.subarray(strarr, 1, strarr.length);
 		strarr = this.replaceKeyWord(strarr, convlocation, this.commandname);
-		
+
 		for (int i = 0; i < strarr.length; i++) {
 			if (Regs.containsKey(strarr[i])) {
 				if (this.getRegReference(strarr[i])) {
@@ -323,7 +340,7 @@ public final class Engine {
 		}
 
 		if (!isAllNum(strarr)) {
-			throwError("Incorrect argument.\n" + ArrayUtils.toString(strarr));
+			throwError("Incorrect argument.\n" + ArrayUtils.toString(strarr)); 
 			return new int[0];
 		}
 		int[] outarr = new int[0];
@@ -345,15 +362,15 @@ public final class Engine {
 			if (ArrayUtils.contains(convlocation, i)) {
 			} else {
 				switch (strarr[i]) {
-				case "TRUE":
-					strarr[i] = "1";
+				case "TRUE": 
+					strarr[i] = "1"; 
 					break;
-				case "FALSE":
-				case "NULL":
-				case "NIL":
-				case "NONE":
-				case "VOID":
-					strarr[i] = "0";
+				case "FALSE": 
+				case "NULL": 
+				case "NIL": 
+				case "NONE": 
+				case "VOID": 
+					strarr[i] = "0"; 
 					break;
 				}
 			}
@@ -386,9 +403,9 @@ public final class Engine {
 			this.Regs.put(index, value);
 		} else {
 			if (this.isRunningNow) {
-				this.throwError("That register cannot be changed.");
+				this.throwError("That register cannot be changed."); 
 			} else {
-				throw new IllegalArgumentException("That register cannot be changed.");
+				throw new IllegalArgumentException("That register cannot be changed."); 
 			}
 		}
 	}
@@ -398,10 +415,10 @@ public final class Engine {
 			return this.Regs.get(index);
 		} else {
 			if (this.isRunningNow) {
-				this.throwError("Elements of this register are not available");
+				this.throwError("Elements of this register are not available"); 
 				return 0;
 			} else {
-				throw new IllegalArgumentException("Elements of this register are not available");
+				throw new IllegalArgumentException("Elements of this register are not available"); 
 			}
 		}
 	}
@@ -471,13 +488,15 @@ public final class Engine {
 	}
 
 	private void initRegMap(int size) {
+		commands.put("APRIL", new Command0401());
+		
 		for (int i = 1; i <= size; i++) {
-			this.addReg("R" + i);
+			this.addReg("R" + i); 
 		}
-		this.addReg("OP");
-		this.addReg("C", 1);
+		this.addReg("OP"); 
+		this.addReg("C", 1); 
 
-		this.setRegChange("OP", false);
+		this.setRegChange("OP", false); 
 		//this.setRegChange("C", false);
 	}
 
