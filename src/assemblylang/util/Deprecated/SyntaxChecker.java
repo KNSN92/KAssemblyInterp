@@ -1,4 +1,4 @@
-package assemblylang.util;
+package assemblylang.util.Deprecated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,8 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Triple;
 
 import assemblylang.Engine;
+import assemblylang.util.CmdStrUtil;
+import assemblylang.util.CommandFunction;
 
 @Deprecated
 public final class SyntaxChecker {
