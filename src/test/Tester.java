@@ -9,8 +9,8 @@ import assemblylang.util.StringQuotationUtil;
 public class Tester {
 
 	public static void main(String[] args) {
-		debugPrint();
-		//runTestScript();
+		//debugPrint();
+		runTestScript();
 	}
 	
 	private static int[] runTestScript() {
