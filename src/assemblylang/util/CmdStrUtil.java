@@ -90,4 +90,61 @@ public final class CmdStrUtil {
 		}
 		return clone;
 	}
+	
+	/**
+	 * keyWordsで指定した文字列のいずれかがlistに含まれているかを調べます。
+	 * @param list 調べる配列
+	 * @param keyWords 調べる文字列
+	 * @return listにkeyWordsのいずれかが含まれているならtrue。でなければfalse。
+	 */
+	public static boolean containsAny(String[] list, String[] keyWords) {
+		for(String listVal:list) {
+			if(isSameAnyWord(listVal,keyWords)) {return true;}
+		}
+		return false;
+	}
+	
+	/**
+	 * keyWordsで指定した文字列のいずれかがstrに含まれているかを調べます。
+	 * @param str 調べる文字列
+	 * @param keyWords 調べる文字列
+	 * @return strにkeyWordsのいずれかが含まれているならtrue。でなければfalse。
+	 */
+	public static boolean isSameAnyWord(String str, String[] keyWords) {
+		return ArrayUtils.contains(keyWords, str);
+	}
+	
+	/**
+	 * matchWordsで指定した構成になっているか調べます。
+	 * @param list 調べる配列
+	 * @param matchWords 調べるのに使う配列
+	 * @return matchWordsで指定した構成になっていればtrue。
+	 */
+	public static boolean isSameAll(String[] list, String[][] matchWords) {
+		Validate.notNull(list);
+		Validate.notNull(matchWords);
+		int index = 0;
+		for(String[] words:matchWords) {
+			for(String word:words) {
+				if(!list[index].matches(word)) {
+					return false;
+				}
+			}
+			index++;
+		}
+		return true;
+	}
+	
+	/**
+	 * 引数の配列の中身の文字列を全て大文字に変換します。
+	 * @param strs 大文字にする配列
+	 * @return 大文字にした引数。
+	 */
+	public static String[] toAllUpperCase(String[] strs) {
+		String[] outs = strs;
+		for(int i = 0; i < strs.length; i++) {
+			outs[i] = outs[i].toUpperCase();
+		}
+		return outs;
+	}
 }
