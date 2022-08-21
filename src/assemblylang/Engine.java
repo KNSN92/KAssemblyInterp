@@ -108,13 +108,7 @@ public final class Engine {
 		
 		this.isRunningNow = true;
 		if (code.contains("#")) { 
-			int hashcount = 0;
-			for (char Char : code.toCharArray()) {
-				if (Char == '#') {
-					hashcount++;
-				}
-			}
-			if (hashcount >= 2) {
+			if (StringUtils.countMatches(code, '#') >= 2) {
 				code = code.substring(0, code.indexOf("#")) + code.substring(code.lastIndexOf("#") + 1); 
 			} else {
 				code = code.substring(0, code.indexOf("#")); 
