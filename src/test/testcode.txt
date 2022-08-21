@@ -1,8 +1,8 @@
-VAR INCNUM 1
-ADD INCNUM OPR
+SET R1 1
+ADD R1 OPR
 SET OPR OP
 DSP OPR
-EQRL 7 OPR 1000
+EQRL 7 OPR 100
 GOTO 2
 EXIT
-#this program is display a 1~100 #
+#this program is display a 1~100 num
