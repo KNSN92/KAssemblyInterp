@@ -165,12 +165,13 @@ public final class Engine {
 			}
 		}
 
-		if (!isAllNum(StrArr)) {
-			throwError("Incorrect argument.\n" + ArrayUtils.toString(StrArr));
-		}
 		int[] IntArr = new int[0];
-		for (String str : StrArr) {
-			IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
+		try {
+			for (String str : StrArr) {
+				IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
+			}
+		} catch (NumberFormatException e) {
+			throwError("Incorrect argument.\n" + ArrayUtils.toString(StrArr));
 		}
 
 		if (isExit) {
