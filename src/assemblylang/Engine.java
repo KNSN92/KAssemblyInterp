@@ -148,7 +148,7 @@ public final class Engine {
 		StrArr = this.replaceKeyWord(StrArr, convlocation, this.commandname);
 
 		for (int i = 0; i < StrArr.length; i++) {
-			if (Regs.containsKey(StrArr[i])) {
+			if (hasRegName(StrArr[i])) {
 				if (this.getRegReference(StrArr[i])) {
 					if (ArrayUtils.contains(convlocation, i)) {
 						StrArr[i] = Integer.toString(this.RegNames.indexOf(StrArr[i]));
