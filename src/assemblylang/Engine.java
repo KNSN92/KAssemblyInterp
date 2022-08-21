@@ -137,7 +137,6 @@ public final class Engine {
 		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
 		StrArr = command.getInitResult(StrArr, this,
 				this.allCustomValueMap.get(commandname), StrArr.length);
-		StrArr = ArrayUtils.insert(0, StrArr, commandname);
 
 		if (isExit) {
 			this.isRunningNow = false;
