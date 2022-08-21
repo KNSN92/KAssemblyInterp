@@ -181,9 +181,9 @@ public final class Engine {
 
 		if (!ArrayUtils.contains(command.getArgCounts(), IntArr.length) &
 				!(command.getArgCounts() == null)) {
-			throwError("The number of arguments does not match the number of values set.", this.getReg("C"));
+			throwError("The number of arguments does not match the number of values set.");
 		} else if (IntArr.length < command.getMinArgCount()) {
-			throwError("The number of arguments does not match the number of values set.", this.getReg("C"));
+			throwError("The number of arguments does not match the number of values set.");
 		}
 
 		if (isExit) {
