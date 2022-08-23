@@ -146,9 +146,10 @@ public final class Engine {
 
 		int[] convlocation = command.getNoConversionLocations();
 		StrArr = this.replaceKeyWord(StrArr, convlocation, this.commandname);
-
+		int[] IntArr = new int[0];
+		
 		for (int i = 0; i < StrArr.length; i++) {
-			if (hasRegName(StrArr[i])) {
+			if (this.hasRegName(StrArr[i])) {
 				if (this.getRegReference(StrArr[i])) {
 					if (ArrayUtils.contains(convlocation, i)) {
 						StrArr[i] = Integer.toString(this.RegNames.indexOf(StrArr[i]));
@@ -164,8 +165,7 @@ public final class Engine {
 						((IEncloseCommand) this.commands.get(StrArr[i])).getEndEncloseCommand());
 			}
 		}
-
-		int[] IntArr = new int[0];
+		
 		try {
 			for (String str : StrArr) {
 				IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
