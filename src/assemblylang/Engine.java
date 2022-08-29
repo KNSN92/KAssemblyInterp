@@ -220,7 +220,7 @@ public final class Engine {
 	public int[] run(String[] codes) {
 		this.codeLen = codes.length;
 		int[] results = new int[codes.length];
-		while (this.getReg("C") <= codes.length) {
+		while (this.getReg("C") <= codeLen) {
 			int result = 0;
 			try {
 				result = this.run(codes[this.getReg("C") - 1]);
