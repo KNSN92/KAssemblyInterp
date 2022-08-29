@@ -213,6 +213,12 @@ public final class Engine {
 			this.Regs.put(command.getReturnRegName(), result);
 		}
 
+		if (isExit) {
+			this.isRunningNow = false;
+			this.setReg("C", this.getReg("C") + 1);
+			return new int[] {0};
+		}
+		
 		this.code = "";
 		this.commandname = "";
 		this.isGoto = false;
