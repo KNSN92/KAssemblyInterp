@@ -122,6 +122,16 @@ public final class Engine {
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
 		commandname = StrArr[0];
+		if(!commands.containsKey(commandname)) {
+			throwError("Command not found.");
+		}
+		
+		if (isExit) {
+			this.isRunningNow = false;
+			this.setReg("C", this.getReg("C") + 1);
+			return new int[] {0};
+		}
+		
 		ICommand command = commands.get(commandname);
 		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
 		StrArr = command.getInitResult(StrArr, this,
@@ -220,7 +230,6 @@ public final class Engine {
 	public int[] run(String[] codes) {
 		codes = StringUtils.join(codes, ';').split("[;\n]");
 		this.codeLen = codes.length;
-		System.out.println(codeLen);
 		int[] results = new int[codes.length];
 		while (this.getReg("C") <= codeLen) {
 			try {
