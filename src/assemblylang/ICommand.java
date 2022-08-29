@@ -21,4 +21,6 @@ public interface ICommand {
 	default public String[] getInitResult(String[] args, Engine engine, int argCount) {
 		return args;
 	}
+	
+	default public void reset() {}
 }
