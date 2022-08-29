@@ -20,6 +20,7 @@ import assemblylang.commands.CommandDIV;
 import assemblylang.commands.CommandDSP;
 import assemblylang.commands.CommandEQRL;
 import assemblylang.commands.CommandEXIT;
+import assemblylang.commands.CommandEXPORT;
 import assemblylang.commands.CommandGOTO;
 import assemblylang.commands.CommandMLT;
 import assemblylang.commands.CommandMOD;
@@ -76,8 +77,6 @@ public final class Engine {
 		commands.put("MOD", new CommandMOD());//mod 
 		commands.put("ABS", new CommandABS());//abs 
 		commands.put("POW", new CommandPOW());//pow 
-		//display
-		commands.put("DSP", new CommandDSP());//display(print) 
 		//register
 		commands.put("SET", new CommandSET());//reg set 
 		commands.put("MOV", new CommandMOV());//reg value move 
@@ -87,7 +86,11 @@ public final class Engine {
 		commands.put("GOTO", new CommandGOTO());//goto 
 		commands.put("EXIT", new CommandEXIT());//exit 
 		//condition
-		commands.put("EQRL", new CommandEQRL());//equal 
+		commands.put("EQRL", new CommandEQRL());//equal
+		//other
+		commands.put("DSP", new CommandDSP());//display(print) 
+		commands.put("EXPORT", new CommandEXPORT());//export
+
 	}
 
 	private void init() {
@@ -234,6 +237,9 @@ public final class Engine {
 	 * @return result
 	 */
 	public int[] run(String[] codes) {
+		for(ICommand command:commands.values()) {
+			command.reset();
+		}
 		codes = StringUtils.join(codes, ';').split("[;\n]");
 		this.codeLen = codes.length;
 		int[] results = new int[codes.length];
@@ -522,5 +528,9 @@ public final class Engine {
 	public void resetDefaultCommand() {
 		this.commands.clear();
 		this.commandRegister();
+	}
+	
+	public int[] getExportValues() {
+		return ((CommandEXPORT)this.commands.get("EXPORT")).ExportInfos;
 	}
 }
