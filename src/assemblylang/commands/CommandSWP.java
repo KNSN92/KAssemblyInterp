@@ -1,14 +1,12 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import assemblylang.Engine;
 import assemblylang.ICommand;
 
 public class CommandSWP implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		int savenum = engine.getReg(input[1]);
 		engine.setReg(input[1], engine.getReg(input[0]));
 		engine.setReg(input[0], savenum);
@@ -16,7 +14,7 @@ public class CommandSWP implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return true;
 	}
 

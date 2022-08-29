@@ -1,12 +1,10 @@
 package assemblylang;
 
-import java.util.Map;
-
 public interface ICommand {
 	
-	public int runCommand(int[]input, Engine engine, Map<String,?> customValueMap, int argCount);
+	public int runCommand(int[]input, Engine engine, int argCount);
 	
-	public boolean isRunnable(int[]input, Engine engine, Map<String,?> customValueMap, int argCount);
+	public boolean isRunnable(int[]input, Engine engine, int argCount);
 	
 	public int[] getArgCounts();
 	
@@ -20,7 +18,7 @@ public interface ICommand {
 		return 0;
 	}
 	
-	default public String[] getInitResult(String[] args, Engine engine, Map<String,?> customValueMap, int argCount) {
+	default public String[] getInitResult(String[] args, Engine engine, int argCount) {
 		return args;
 	}
 }

@@ -1,7 +1,6 @@
 package assemblylang.commands;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import assemblylang.Engine;
 import assemblylang.ICommand;
@@ -9,7 +8,7 @@ import assemblylang.ICommand;
 public class CommandADD implements ICommand {
 
 	@Override
-	public int runCommand(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[]input, Engine engine, int argCount) {
 		return Arrays.stream(input).sum();
 		
 	}
@@ -20,7 +19,7 @@ public class CommandADD implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[]input, Engine engine, int argCount) {
 		return true;
 	}
 

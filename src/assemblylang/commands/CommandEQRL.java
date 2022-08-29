@@ -1,14 +1,12 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import assemblylang.Engine;
 import assemblylang.ICommand;
 
 public class CommandEQRL implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		if(input[1]==input[2]) {
 			engine.Goto(input[0]);
 		}
@@ -16,7 +14,7 @@ public class CommandEQRL implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return true;
 	}
 

@@ -1,21 +1,19 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import assemblylang.Engine;
 import assemblylang.ICommand;
 
 public class CommandMOV implements ICommand {
 	
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		engine.setReg(input[1], engine.getReg(input[0]));
 		engine.setReg(input[0], 0);
 		return 0;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return true;
 	}
 

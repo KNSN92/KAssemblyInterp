@@ -1,19 +1,17 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import assemblylang.Engine;
 import assemblylang.ICommand;
 
 public class CommandMOD implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		return input[0] % input[1];
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return true;
 	}
 

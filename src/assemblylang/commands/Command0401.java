@@ -1,14 +1,12 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import assemblylang.Engine;
 import assemblylang.ICommand;
 
 public class Command0401 implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		if(argCount > 0 & input[0]==401) {
 			System.out.println("Today is April Fool's Day! Right?");
 		}else {
@@ -18,7 +16,7 @@ public class Command0401 implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return argCount > 0 ? input[0] == 401 | input[0] == 0 : false;
 	}
 

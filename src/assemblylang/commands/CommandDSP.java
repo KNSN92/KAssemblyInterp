@@ -1,7 +1,5 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,7 +9,7 @@ import assemblylang.ICommand;
 public class CommandDSP implements ICommand {
 
 	@Override
-	public int runCommand(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[]input, Engine engine, int argCount) {
 		String printStr = StringUtils.join(ArrayUtils.toObject(input), " ");
 		System.out.println(printStr);
 		return 0;
@@ -23,7 +21,7 @@ public class CommandDSP implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[]input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[]input, Engine engine, int argCount) {
 		return true;
 	}
 

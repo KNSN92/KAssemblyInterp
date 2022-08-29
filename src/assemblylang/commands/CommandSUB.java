@@ -1,7 +1,5 @@
 package assemblylang.commands;
 
-import java.util.Map;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import assemblylang.Engine;
@@ -10,7 +8,7 @@ import assemblylang.ICommand;
 public class CommandSUB implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public int runCommand(int[] input, Engine engine, int argCount) {
 		int result = input[0];
 		int[] subinput = ArrayUtils.subarray(input, 1, input.length);
 		for(int in:subinput) {
@@ -20,7 +18,7 @@ public class CommandSUB implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public boolean isRunnable(int[] input, Engine engine, int argCount) {
 		return true;
 	}
 
