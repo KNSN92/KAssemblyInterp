@@ -101,8 +101,8 @@ public final class Engine {
 	 */
 	public int run(String code) {
 
-		if (code.contains("\n")) {
-			this.run(code.split("\n"));
+		if (code.contains("\n") || code.contains(";")) {
+			this.run(code.split("[;\n]"));
 		}
 
 		this.isRunningNow = true;
@@ -219,6 +219,7 @@ public final class Engine {
 	 */
 	public int[] run(String[] codes) {
 		this.codeLen = codes.length;
+		codes = StringUtils.join(codes, ';').split("[;\n]");
 		int[] results = new int[codes.length];
 		while (this.getReg("C") <= codeLen) {
 			int result = 0;
