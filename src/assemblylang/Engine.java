@@ -99,10 +99,10 @@ public final class Engine {
 	 * @param code
 	 * @return result
 	 */
-	public int run(String code) {
+	public int[] run(String code) {
 
 		if (code.contains("\n") || code.contains(";")) {
-			this.run(code.split("[;\n]"));
+			return this.run(code.split("[;\n]"));
 		}
 
 		this.isRunningNow = true;
@@ -115,7 +115,7 @@ public final class Engine {
 		}
 		if (code.length() <= 0) {
 			this.setReg("C", this.getReg("C") + 1);
-			return 0;
+			return new int[] {0};
 		}
 		this.code = code;
 		code = code.toUpperCase();
@@ -130,7 +130,7 @@ public final class Engine {
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return 0;
+			return new int[] {0};
 		}
 
 		int[] convlocation = command.getNoConversionLocations();
@@ -162,7 +162,7 @@ public final class Engine {
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return 0;
+			return new int[] {0};
 		}
 
 		if (!ArrayUtils.contains(command.getArgCounts(), IntArr.length) &
@@ -175,7 +175,7 @@ public final class Engine {
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return 0;
+			return new int[] {0};
 		}
 
 		int result = 0;
@@ -188,7 +188,7 @@ public final class Engine {
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return 0;
+			return new int[] {0};
 		}
 
 		if (isGoto) {
@@ -198,8 +198,8 @@ public final class Engine {
 		}
 
 		if (command.getReturnRegName() == null) {
-			return 0;
-		} else if (this.Regs.containsKey(command.getReturnRegName())) {
+			return new int[] {0};
+		} else if (this.hasRegName(command.getReturnRegName())) {
 			this.Regs.put(command.getReturnRegName(), result);
 		}
 
@@ -209,7 +209,7 @@ public final class Engine {
 		this.isExit = false;
 		this.isRunningNow = false;
 
-		return result;
+		return new int[]{result};
 	}
 
 	/**
@@ -218,20 +218,19 @@ public final class Engine {
 	 * @return result
 	 */
 	public int[] run(String[] codes) {
-		this.codeLen = codes.length;
 		codes = StringUtils.join(codes, ';').split("[;\n]");
+		this.codeLen = codes.length;
+		System.out.println(codeLen);
 		int[] results = new int[codes.length];
 		while (this.getReg("C") <= codeLen) {
-			int result = 0;
 			try {
-				result = this.run(codes[this.getReg("C") - 1]);
+				results = ArrayUtils.addAll(results, this.run(codes[this.getReg("C") - 1]));
 			} catch (Exception e) {
 				System.out.println("Oh my god...\n" + "It looks like an error occurred in java.");
 				System.out.println("Error:" + "\nLine:" + this.getReg("C"));
 				e.printStackTrace();
 				System.exit(0);
 			}
-			ArrayUtils.add(results, result);
 			if (isExit) {
 				break;
 			}
