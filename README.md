@@ -1,4 +1,4 @@
-# KAssemblyasennburiInterp
+# KAssemblyInterp
 ## 説明
 my making a programing lang.
 これは、私のJAVAの練習がてら作った物で、簡単なプログラムを作成できます。仕様は後付けでどんどんつけていき、不具合が見つかれば修正する、新しい機能をつけたいと思えば即興でつける、不具合が見つかれば...
