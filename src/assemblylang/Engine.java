@@ -38,7 +38,6 @@ public final class Engine {
 	private Map<String, Integer> RegIDs = new HashMap<>();
 	private Map<String, ICommand> commands = new HashMap<>();
 	private String[] commandMultiLineCount = new String[0];
-	private Map<String, Map<String, ?>> allCustomValueMap = new HashMap<>();
 
 	private String code = "";
 	private String commandname = "";
@@ -122,21 +121,11 @@ public final class Engine {
 		code = code.toUpperCase();
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
-		if (commands.containsKey(StrArr[0])) {
-		} else {
-			boolean isFoundEndCommand = false;
-			for (ICommand command : commands.values()) {
-				if (command instanceof IEncloseCommand) {
-
-				}
-			}
-			throwError("Command not found.");
-		}
 		commandname = StrArr[0];
 		ICommand command = commands.get(commandname);
 		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
 		StrArr = command.getInitResult(StrArr, this,
-				this.allCustomValueMap.get(commandname), StrArr.length);
+				StrArr.length);
 
 		if (isExit) {
 			this.isRunningNow = false;
@@ -147,7 +136,7 @@ public final class Engine {
 		int[] convlocation = command.getNoConversionLocations();
 		StrArr = this.replaceKeyWord(StrArr, convlocation, this.commandname);
 		int[] IntArr = new int[0];
-		
+
 		for (int i = 0; i < StrArr.length; i++) {
 			if (this.hasRegName(StrArr[i])) {
 				if (this.getRegReference(StrArr[i])) {
@@ -160,12 +149,8 @@ public final class Engine {
 
 				}
 			}
-			if (commands.get(StrArr[i]) instanceof IEncloseCommand) {
-				ArrayUtils.add(this.commandMultiLineCount,
-						((IEncloseCommand) this.commands.get(StrArr[i])).getEndEncloseCommand());
-			}
 		}
-		
+
 		try {
 			for (String str : StrArr) {
 				IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
@@ -194,19 +179,10 @@ public final class Engine {
 		}
 
 		int result = 0;
-		if (command instanceof IEncloseCommand) {
-			if (commandname.equals(((IEncloseCommand) command).getEndEncloseCommand())) {
-				result = ((IEncloseCommand) command).runEndEncloseCommand(IntArr, this, this.allCustomValueMap,
-						IntArr.length);
-			} else {
-				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
-			}
+		if (command.isRunnable(IntArr, this, IntArr.length)) {
+			result = command.runCommand(IntArr, this, IntArr.length);
 		} else {
-			if (command.isRunnable(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length)) {
-				result = command.runCommand(IntArr, this, this.allCustomValueMap.get(commandname), IntArr.length);
-			} else {
-				throwError("Command not found.");
-			}
+			throwError("Command not found.");
 		}
 
 		if (isExit) {
