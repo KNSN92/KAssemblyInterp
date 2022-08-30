@@ -238,7 +238,7 @@ public final class Engine {
 	 */
 	public int[] run(String[] codes) {
 		for(ICommand command:commands.values()) {
-			command.reset();
+			command.init();
 		}
 		codes = StringUtils.join(codes, ';').split("[;\n]");
 		this.codeLen = codes.length;

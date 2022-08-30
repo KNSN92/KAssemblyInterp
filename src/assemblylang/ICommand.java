@@ -22,5 +22,5 @@ public interface ICommand {
 		return args;
 	}
 	
-	default public void reset() {}
+	default public void init() {}
 }
