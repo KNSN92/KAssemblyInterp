@@ -13,6 +13,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import com.google.common.collect.Maps;
+
 import assemblylang.commands.Command0401;
 import assemblylang.commands.CommandABS;
 import assemblylang.commands.CommandADD;
@@ -164,12 +166,14 @@ public final class Engine {
 			}
 		}
 
+		String errorArgName = "";
 		try {
 			for (String str : StrArr) {
+				errorArgName = str;
 				IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
 			}
 		} catch (NumberFormatException e) {
-			throwError("Incorrect argument.\n" + ArrayUtils.toString(StrArr));
+			throwError("Incorrect argument.\nErrorArg:" + errorArgName);
 		}
 
 		if (isExit) {
@@ -504,6 +508,10 @@ public final class Engine {
 	public void addReg(String RegName) {
 		this.addReg(RegName, 0);
 	}
+	
+	public Map<String, Integer> getRegs(){
+		return Maps.newHashMap(Regs); 
+	}
 
 	/**
 	 * add command
@@ -529,6 +537,7 @@ public final class Engine {
 		this.commands.clear();
 		this.commandRegister();
 	}
+
 	
 	public int[] getExportValues() {
 		return ((CommandEXPORT)this.commands.get("EXPORT")).ExportInfos;
