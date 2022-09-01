@@ -24,6 +24,7 @@ import assemblylang.commands.CommandEQRL;
 import assemblylang.commands.CommandEXIT;
 import assemblylang.commands.CommandEXPORT;
 import assemblylang.commands.CommandGOTO;
+import assemblylang.commands.CommandLABEL;
 import assemblylang.commands.CommandMLT;
 import assemblylang.commands.CommandMOD;
 import assemblylang.commands.CommandMOV;
@@ -42,6 +43,7 @@ public final class Engine {
 	private Map<String, ICommand> commands = new HashMap<>();
 	private String[] commandMultiLineCount = new String[0];
 
+	private String[] codes = ArrayUtils.EMPTY_STRING_ARRAY;
 	private String code = "";
 	private String commandname = "";
 	private int codeLen = 0;
@@ -92,6 +94,7 @@ public final class Engine {
 		//other
 		commands.put("DSP", new CommandDSP());//display(print) 
 		commands.put("EXPORT", new CommandEXPORT());//export
+		commands.put("LABEL", new CommandLABEL());
 
 	}
 
@@ -105,12 +108,10 @@ public final class Engine {
 	 * @return result
 	 */
 	public int[] run(String code) {
-
-		if (code.contains("\n") || code.contains(";")) {
-			return this.run(code.split("[;\n]"));
-		}
-
+		
 		this.isRunningNow = true;
+		
+		this.code = code;
 		if (code.contains("#")) {
 			if (StringUtils.countMatches(code, '#') >= 2) {
 				code = code.substring(0, code.indexOf("#")) + code.substring(code.lastIndexOf("#") + 1);
@@ -118,11 +119,16 @@ public final class Engine {
 				code = code.substring(0, code.indexOf("#"));
 			}
 		}
+
+		if (code.contains("\n") || code.contains(";")) {
+			return this.run(code.split("[;\n]"));
+		}
+		
 		if (code.length() <= 0) {
 			this.setReg("C", this.getReg("C") + 1);
 			return new int[] {0};
 		}
-		this.code = code;
+		
 		code = code.toUpperCase();
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
@@ -244,15 +250,15 @@ public final class Engine {
 		for(ICommand command:commands.values()) {
 			command.init();
 		}
-		codes = StringUtils.join(codes, ';').split("[;\n]");
 		this.codeLen = codes.length;
+		this.codes = codes;
 		int[] results = new int[codes.length];
 		while (this.getReg("C") <= codeLen) {
 			try {
 				results = ArrayUtils.addAll(results, this.run(codes[this.getReg("C") - 1]));
 			} catch (Exception e) {
-				System.out.println("Oh my god...\n" + "It looks like an error occurred in java.");
-				System.out.println("Error:" + "\nLine:" + this.getReg("C"));
+				System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
+				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C")+"\n");
 				e.printStackTrace();
 				System.exit(0);
 			}
@@ -520,6 +526,10 @@ public final class Engine {
 	 */
 	public void addCommand(String commandName, ICommand command) {
 		this.commands.put(commandName, command);
+	}
+	
+	public ICommand getCommand(String commandName) {
+		return commands.get(commandName);
 	}
 
 	/**
