@@ -2,22 +2,21 @@ package assemblylang.commands;
 
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+
 import assemblylang.Engine;
 import assemblylang.ICommand;
 import assemblylang.util.CmdStrUtil;
 
-public class CommandGOTO implements ICommand {
-
-	String label = "";
+public class CommandLABEL implements ICommand{
+	
+	Map<String,Integer> labelPos = Maps.newHashMap();
+	String LabelName = "";
+	int LabelValue = 0;
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
-		Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
-		if (labelPos.containsKey(label)) {
-			engine.Goto(labelPos.get(label));
-		}else {
-			engine.throwError("Label not fount.");
-		}
+		labelPos.put(LabelName, LabelValue);
 		return 0;
 	}
 
@@ -35,13 +34,18 @@ public class CommandGOTO implements ICommand {
 	public String getReturnRegName() {
 		return null;
 	}
-
+	
 	@Override
 	public String[] getInitResult(String[] args, Engine engine, int argCount) {
-
-		label = args[0];
-		args = CmdStrUtil.replaceZero(args,0);
+		LabelName = args[0];
+		LabelValue = engine.getReg("C");
+		args = CmdStrUtil.replaceZero(args, 0);
 		return args;
+	}
+	
+	@Override
+	public void init() {
+		labelPos = Maps.newHashMap();
 	}
 
 }
