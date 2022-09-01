@@ -25,7 +25,6 @@ public class CommandVAR implements ICommand{
 			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
 			if(isConst)engine.setRegChange(VarName, false);
 		}
-		System.out.println(engine.getRegs().toString());
 		return 0;
 	}
 
@@ -61,12 +60,22 @@ public class CommandVAR implements ICommand{
 			VarName = args[index];
 			args = CmdStrUtil.replaceZero(args, index);
 			index++;
-			if(NumberUtils.isParsable(args[index])) {
+		}else {
+			engine.throwError("A variable name is required.");
+			return args;
+		}
+			
+		if (isConst ? argCount == 3 : argCount == 2) {
+			if (NumberUtils.isParsable(args[index])) {
 				useNumIndex = index;
 				index++;
+			}else {
+				engine.throwError("Incorrect argument.");
+				return args;
 			}
+		}else {
+			useNumIndex = -1;
 		}
-		
 		return args;
 	}
 }
