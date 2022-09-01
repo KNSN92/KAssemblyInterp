@@ -55,6 +55,8 @@ public class CommandVAR implements ICommand{
 			isConst=true;
 			args = CmdStrUtil.replaceZero(args, index);
 			index++;
+		}else {
+			isConst=false;
 		}
 		if(args[index].matches("^[A-Za-z]\\w+$") & !ArrayUtils.contains(engine.NGWordList, args[index])) {
 			VarName = args[index];
