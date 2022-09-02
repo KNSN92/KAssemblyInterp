@@ -11,7 +11,6 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import com.google.common.collect.Maps;
 
@@ -34,6 +33,7 @@ import assemblylang.commands.CommandSUB;
 import assemblylang.commands.CommandSWP;
 import assemblylang.commands.CommandVAR;
 
+@SuppressWarnings("unused")
 public final class Engine {
 
 	private Map<String, Integer> Regs = new HashMap<>();
@@ -42,6 +42,8 @@ public final class Engine {
 	private Map<String, Integer> RegIDs = new HashMap<>();
 	private Map<String, ICommand> commands = new HashMap<>();
 	private String[] commandMultiLineCount = new String[0];
+
+	private int regSize = 0;
 
 	private String[] codes = ArrayUtils.EMPTY_STRING_ARRAY;
 	private String code = "";
@@ -55,6 +57,7 @@ public final class Engine {
 	private boolean isRunningNow = false;
 	private boolean isGoto = false;
 	private boolean isExit = false;
+	private boolean isInit = false;
 
 	public boolean isOutError = true;
 	public String[] NGWordList = { "TRUE", "FALSE", "NULL", "NIL", "NONE", "VOID", "CONST", "FINAL" };
@@ -90,7 +93,8 @@ public final class Engine {
 		commands.put("GOTO", new CommandGOTO());//goto 
 		commands.put("EXIT", new CommandEXIT());//exit 
 		//condition
-		commands.put("EQRL", new CommandEQRL());//equal
+		commands.put("EQRL", new CommandEQRL(false));//equal
+		commands.put("EQRLNOT", new CommandEQRL(true));//equal not
 		//other
 		commands.put("DSP", new CommandDSP());//display(print) 
 		commands.put("EXPORT", new CommandEXPORT());//export
@@ -108,9 +112,9 @@ public final class Engine {
 	 * @return result
 	 */
 	public int[] run(String code) {
-		
+
 		this.isRunningNow = true;
-		
+
 		this.code = code;
 		if (code.contains("#")) {
 			if (StringUtils.countMatches(code, '#') >= 2) {
@@ -123,41 +127,51 @@ public final class Engine {
 		if (code.contains("\n") || code.contains(";")) {
 			return this.run(code.split("[;\n]"));
 		}
-		
+
 		if (code.length() <= 0) {
 			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
+			return new int[] { 0 };
 		}
-		
+
 		code = code.toUpperCase();
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
 		commandname = StrArr[0];
-		if(!commands.containsKey(commandname)) {
+		
+		if (!commands.containsKey(commandname)) {
 			throwError("Command not found.");
 		}
-		
-		if (isExit) {
-			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
-		}
-		
-		ICommand command = commands.get(commandname);
-		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
-		StrArr = command.getInitResult(StrArr, this,
-				StrArr.length);
 
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
+			return new int[] { 0 };
+		}
+
+		ICommand command = commands.get(commandname);
+		
+		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
+		
+		if (!ArrayUtils.contains(command.getArgCounts(), StrArr.length) &
+				!(command.getArgCounts() == null)) {
+			throwError("The number of arguments does not match the number of values set.");
+		} else if (StrArr.length < command.getMinArgCount()) {
+			throwError("The number of arguments does not match the number of values set.");
+		}
+		
+		StrArr = command.getInitResult(StrArr, this,
+				StrArr.length, isInit);
+
+		if (isExit) {
+			this.isRunningNow = false;
+			this.setReg("C", this.getReg("C") + 1);
+			return new int[] { 0 };
 		}
 
 		int[] convlocation = command.getNoConversionLocations();
 		StrArr = this.replaceKeyWord(StrArr, convlocation, this.commandname);
 		int[] IntArr = new int[0];
-
+		
 		for (int i = 0; i < StrArr.length; i++) {
 			if (this.hasRegName(StrArr[i])) {
 				if (this.getRegReference(StrArr[i])) {
@@ -167,7 +181,7 @@ public final class Engine {
 						StrArr[i] = Integer.toString(this.getReg(StrArr[i]));
 					}
 				} else {
-
+					throwError("This variable cannot be referenced.");
 				}
 			}
 		}
@@ -185,60 +199,59 @@ public final class Engine {
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
-		}
-
-		if (!ArrayUtils.contains(command.getArgCounts(), IntArr.length) &
-				!(command.getArgCounts() == null)) {
-			throwError("The number of arguments does not match the number of values set.");
-		} else if (IntArr.length < command.getMinArgCount()) {
-			throwError("The number of arguments does not match the number of values set.");
+			return new int[] { 0 };
 		}
 
 		if (isExit) {
 			this.isRunningNow = false;
 			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
+			return new int[] { 0 };
 		}
 
 		int result = 0;
-		if (command.isRunnable(IntArr, this, IntArr.length)) {
-			result = command.runCommand(IntArr, this, IntArr.length);
+
+		if (isInit) {
+			command.initRun(IntArr, this, IntArr.length);
+			this.setReg("C", this.getReg("C") + 1);
 		} else {
-			throwError("Command not found.");
+			if (command.isRunnable(IntArr, this, IntArr.length)) {
+				result = command.runCommand(IntArr, this, IntArr.length);
+			} else {
+				throwError("Command not found.");
+			}
+
+			if (isExit) {
+				this.isRunningNow = false;
+				this.setReg("C", this.getReg("C") + 1);
+				return new int[] { 0 };
+			}
+
+			if (isGoto) {
+				this.isGoto = false;
+			} else {
+				this.setReg("C", this.getReg("C") + 1);
+			}
+
+			if (command.getReturnRegName() == null) {
+				return new int[] { 0 };
+			} else if (this.hasRegName(command.getReturnRegName())) {
+				this.Regs.put(command.getReturnRegName(), result);
+			}
+
+			if (isExit) {
+				this.isRunningNow = false;
+				this.setReg("C", this.getReg("C") + 1);
+				return new int[] { 0 };
+			}
 		}
 
-		if (isExit) {
-			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
-		}
-
-		if (isGoto) {
-			this.isGoto = false;
-		} else {
-			this.setReg("C", this.getReg("C") + 1);
-		}
-
-		if (command.getReturnRegName() == null) {
-			return new int[] {0};
-		} else if (this.hasRegName(command.getReturnRegName())) {
-			this.Regs.put(command.getReturnRegName(), result);
-		}
-
-		if (isExit) {
-			this.isRunningNow = false;
-			this.setReg("C", this.getReg("C") + 1);
-			return new int[] {0};
-		}
-		
 		this.code = "";
 		this.commandname = "";
 		this.isGoto = false;
 		this.isExit = false;
 		this.isRunningNow = false;
 
-		return new int[]{result};
+		return new int[] { result };
 	}
 
 	/**
@@ -247,18 +260,38 @@ public final class Engine {
 	 * @return result
 	 */
 	public int[] run(String[] codes) {
-		for(ICommand command:commands.values()) {
-			command.init();
-		}
 		this.codeLen = codes.length;
 		this.codes = codes;
-		int[] results = new int[codes.length];
+		this.setReg("C", 1, true);
+		
+		for (ICommand command : commands.values()) {
+			command.init();
+		}
+		isInit = true;
+		while (this.getReg("C") <= codeLen) {
+			try {
+				this.run(codes[this.getReg("C") - 1]);
+			} catch (Exception e) {
+				System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
+				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C") + "\n");
+				e.printStackTrace();
+				System.exit(0);
+			}
+			if (isExit) {
+				break;
+			}
+		}
+		this.setReg("C", 1, true);
+
+		int[] results = new int[0];
+		isInit = false;
+		results = new int[codes.length];
 		while (this.getReg("C") <= codeLen) {
 			try {
 				results = ArrayUtils.addAll(results, this.run(codes[this.getReg("C") - 1]));
 			} catch (Exception e) {
 				System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
-				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C")+"\n");
+				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C") + "\n");
 				e.printStackTrace();
 				System.exit(0);
 			}
@@ -267,6 +300,8 @@ public final class Engine {
 			}
 		}
 		this.codeLen = 0;
+		this.setReg("C", 1, true);
+
 		return results;
 	}
 
@@ -391,11 +426,15 @@ public final class Engine {
 	 * @return
 	 */
 	public int getReg(int index) {
-		return this.getReg(this.toRegName(index));
+		return this.getReg(this.toRegName(index), false);
 	}
 
 	public void setReg(String index, int value) {
-		if (this.getRegChange(index)) {
+		this.setReg(index, value, false);
+	}
+
+	public void setReg(String index, int value, boolean enforcement) {
+		if (this.getRegChange(index) || enforcement) {
 			this.Regs.put(index, value);
 		} else {
 			if (this.isRunningNow) {
@@ -407,7 +446,11 @@ public final class Engine {
 	}
 
 	public int getReg(String index) {
-		if (this.getRegReference(index)) {
+		return this.getReg(index, false);
+	}
+
+	public int getReg(String index, boolean enforcement) {
+		if (this.getRegReference(index) || enforcement) {
 			return this.Regs.get(index);
 		} else {
 			if (this.isRunningNow) {
@@ -474,16 +517,18 @@ public final class Engine {
 		return this.RegSetting.get(Reg)[0];
 	}
 
-	private boolean isAllNum(String[] strarr) {
+	/*private boolean isAllNum(String[] strarr) {
 		for (String str : strarr) {
 			if (!NumberUtils.isParsable(str)) {
 				return false;
 			}
 		}
 		return true;
-	}
+	}*/
 
 	private void initRegMap(int size) {
+		this.regSize = size;
+
 		commands.put("APRIL", new Command0401());
 
 		for (int i = 1; i <= size; i++) {
@@ -514,9 +559,9 @@ public final class Engine {
 	public void addReg(String RegName) {
 		this.addReg(RegName, 0);
 	}
-	
-	public Map<String, Integer> getRegs(){
-		return Maps.newHashMap(Regs); 
+
+	public Map<String, Integer> getRegs() {
+		return Maps.newHashMap(Regs);
 	}
 
 	/**
@@ -527,7 +572,7 @@ public final class Engine {
 	public void addCommand(String commandName, ICommand command) {
 		this.commands.put(commandName, command);
 	}
-	
+
 	public ICommand getCommand(String commandName) {
 		return commands.get(commandName);
 	}
@@ -540,6 +585,10 @@ public final class Engine {
 		this.commands.remove(commandName);
 	}
 
+	public void clearCommands() {
+		this.commands.clear();
+	}
+
 	/**
 	 * set command registry default
 	 */
@@ -548,8 +597,8 @@ public final class Engine {
 		this.commandRegister();
 	}
 
-	
 	public int[] getExportValues() {
-		return ((CommandEXPORT)this.commands.get("EXPORT")).ExportInfos;
+		return ((CommandEXPORT) this.commands.get("EXPORT")).ExportInfos;
 	}
+
 }
