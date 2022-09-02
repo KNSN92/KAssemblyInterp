@@ -16,13 +16,14 @@ public class Tester {
 	private static int[] runTestScript() {
 		Engine engine = new Engine(8);
 		int[] result = new int[0];
-		engine.addReg("OPR");
+		//engine.addReg("OPR");
 		try {
-			result = engine.run(new File("src/test/testcode.txt"));
+			//result = engine.run(new File("src/test/testcode.txt"));
+			result = engine.run(new File("src/test/Fibonacci.txt"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		//System.out.println(ArrayUtils.toString(engine.getExportValues()));
 		return result;
 	}
 	
