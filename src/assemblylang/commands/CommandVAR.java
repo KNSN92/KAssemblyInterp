@@ -18,13 +18,6 @@ public class CommandVAR implements ICommand{
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
-		if (engine.hasRegName(VarName)) {
-			engine.throwError("The variable name already exists.\n"+"VarName:"+VarName);
-		}else {
-			engine.addReg(VarName);
-			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
-			if(isConst)engine.setRegChange(VarName, false);
-		}
 		return 0;
 	}
 
@@ -49,35 +42,53 @@ public class CommandVAR implements ICommand{
 	}
 	
 	@Override
-	public String[] getInitResult(String[] args, Engine engine, int argCount) {
-		int index = 0;
-		if(ArrayUtils.contains(CONST_WORDS, args[index])) {
-			isConst=true;
-			args = CmdStrUtil.replaceZero(args, index);
-			index++;
-		}else {
-			isConst=false;
-		}
-		if(args[index].matches("^[A-Za-z]\\w+$") & !ArrayUtils.contains(engine.NGWordList, args[index])) {
-			VarName = args[index];
-			args = CmdStrUtil.replaceZero(args, index);
-			index++;
-		}else {
-			engine.throwError("A variable name is required.");
-			return args;
-		}
-			
-		if (isConst ? argCount == 3 : argCount == 2) {
-			if (NumberUtils.isParsable(args[index])) {
-				useNumIndex = index;
+	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
+		if (isInit) {
+			int index = 0;
+			if (ArrayUtils.contains(CONST_WORDS, args[index])) {
+				isConst = true;
+				args = CmdStrUtil.replaceZero(args, index);
 				index++;
-			}else {
-				engine.throwError("Incorrect argument.");
+			} else {
+				isConst = false;
+			}
+			if (args[index].matches("^[A-Za-z]\\w+$") & !ArrayUtils.contains(engine.NGWordList, args[index])) {
+				VarName = args[index];
+				args = CmdStrUtil.replaceZero(args, index);
+				index++;
+			} else {
+				engine.throwError("A variable name is required.");
 				return args;
 			}
+			if (isConst ? argCount == 3 : argCount == 2) {
+				if (NumberUtils.isParsable(args[index])) {
+					useNumIndex = index;
+					index++;
+				} else {
+					engine.throwError("Incorrect argument.");
+					return args;
+				}
+			} else {
+				useNumIndex = -1;
+			} 
 		}else {
-			useNumIndex = -1;
+			for(int i = 0; i < args.length; i++) {
+				args = CmdStrUtil.replaceZero(args, i);
+			}
 		}
 		return args;
 	}
+
+	@Override
+	public void initRun(int[] input, Engine engine, int argCount) {
+		if (engine.hasRegName(VarName)) {
+			engine.throwError("The variable name already exists.\n"+"VarName:"+VarName);
+		}else {
+			engine.addReg(VarName);
+			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
+			if(isConst)engine.setRegChange(VarName, false);
+		}
+	}
+	
+
 }

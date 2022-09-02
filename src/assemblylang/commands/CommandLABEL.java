@@ -16,7 +16,6 @@ public class CommandLABEL implements ICommand{
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
-		labelPos.put(LabelName, LabelValue);
 		return 0;
 	}
 
@@ -36,16 +35,27 @@ public class CommandLABEL implements ICommand{
 	}
 	
 	@Override
-	public String[] getInitResult(String[] args, Engine engine, int argCount) {
-		LabelName = args[0];
-		LabelValue = engine.getReg("C");
-		args = CmdStrUtil.replaceZero(args, 0);
+	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
+		if (isInit) {
+			LabelName = args[0];
+			LabelValue = engine.getReg("C");
+			args = CmdStrUtil.replaceZero(args, 0);
+		}else {
+			for(int i=0;i<args.length;i++) {
+				args = CmdStrUtil.replaceZero(args,i);
+			}
+		}
 		return args;
 	}
 	
 	@Override
 	public void init() {
 		labelPos = Maps.newHashMap();
+	}
+	
+	@Override
+	public void initRun(int[] input, Engine engine, int argCount) {
+		labelPos.put(LabelName, LabelValue);
 	}
 
 }
