@@ -37,7 +37,7 @@ public class CommandGOTO implements ICommand {
 	}
 
 	@Override
-	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
+	public String[] getInitResult(String[] args, Engine engine, int argCount) {
 
 		label = args[0];
 		args = CmdStrUtil.replaceZero(args,0);
