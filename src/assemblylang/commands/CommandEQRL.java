@@ -9,15 +9,32 @@ import assemblylang.util.CmdStrUtil;
 public class CommandEQRL implements ICommand {
 
 	private String label = "";
+	
+	private boolean not = false;
+	
+	public CommandEQRL(boolean not) {
+		this.not = not;
+	}
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
-		if(input[1]==input[2]) {
-			Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
-			if (labelPos.containsKey(label)) {
-				engine.Goto(labelPos.get(label));
-			}else {
-				engine.throwError("Label not fount.");
+		if(not) {
+			if(input[1]!=input[2]) {
+				Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
+				if (labelPos.containsKey(label)) {
+					engine.Goto(labelPos.get(label));
+				}else {
+					engine.throwError("Label not fount.");
+				}
+			}
+		}else {
+			if(input[1]==input[2]) {
+				Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
+				if (labelPos.containsKey(label)) {
+					engine.Goto(labelPos.get(label));
+				}else {
+					engine.throwError("Label not fount.");
+				}
 			}
 		}
 		return 0;
@@ -39,7 +56,7 @@ public class CommandEQRL implements ICommand {
 	}
 	
 	@Override
-	public String[] getInitResult(String[] args, Engine engine, int argCount) {
+	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
 
 		label  = args[0];
 		args = CmdStrUtil.replaceZero(args,0);
