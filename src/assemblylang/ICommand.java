@@ -18,9 +18,11 @@ public interface ICommand {
 		return 0;
 	}
 	
-	default public String[] getInitResult(String[] args, Engine engine, int argCount) {
+	default public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
 		return args;
 	}
 	
 	default public void init() {}
+	
+	default public void initRun(int[]input, Engine engine, int argCount) {}
 }
