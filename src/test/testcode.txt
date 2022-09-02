@@ -1,8 +1,26 @@
-SET R1 1
-ADD R1 OPR
-SET OPR OP
-DSP OPR
-EQRL 7 OPR 100
-GOTO 2
-EXIT
+
+# '#'はコメント記号。#から改行もしくはその行の最後の#までの文字を読み飛ばす。(python風)#
+
+VAR CONST COUNTNUM 4 # COUNTNUM定数を作成。1を代入。
+
+VAR OPR # OPR変数を作成。自動で0を代入。
+
+LABEL START # STARTラベルを作成。
+
+DSP OPR # OPR変数を表示。
+
+ADD OPR COUNTNUM # OPR変数とCOUNTNUM変数を加算。答えはOP変数に格納。
+
+SET OPR OP # OPR変数にOP変数を代入。
+
+EQRL END OPR 1000 # もしOPR変数が20ではないならENDラベルへGOTOする。
+
+GOTO START # STARTラベルへGOTOする。
+
+LABEL END # ラベルENDを定義する。
+
+DSP OPR # OPR変数を表示。
+
+EXIT # プログラムを終了する。
+
 #this program is display a 1~100 num
