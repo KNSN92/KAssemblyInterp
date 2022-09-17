@@ -10,9 +10,9 @@ import assemblylang.util.CmdStrUtil;
 
 public class CommandLABEL implements ICommand{
 	
-	Map<String,Integer> labelPos = Maps.newHashMap();
-	String LabelName = "";
-	int LabelValue = 0;
+	public Map<String,Integer> labelPos = Maps.newHashMap();
+	private String LabelName = "";
+	private int LabelValue = 0;
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
@@ -37,8 +37,12 @@ public class CommandLABEL implements ICommand{
 	@Override
 	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
 		if (isInit) {
-			LabelName = args[0];
-			LabelValue = engine.getReg("C");
+			if(args[0].matches("^[A-Za-z]\\w+$")) {
+				LabelName = args[0];
+				LabelValue = engine.getReg("C");
+			}else {
+				engine.throwError("This is contrary to the label naming convention.");
+			}
 			args = CmdStrUtil.replaceZero(args, 0);
 		}else {
 			for(int i=0;i<args.length;i++) {
@@ -49,7 +53,7 @@ public class CommandLABEL implements ICommand{
 	}
 	
 	@Override
-	public void init() {
+	public void init(Engine engine) {
 		labelPos = Maps.newHashMap();
 	}
 	
