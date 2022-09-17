@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -41,7 +42,7 @@ public final class Engine {
 	private List<String> RegNames = new ArrayList<>();
 	private Map<String, Integer> RegIDs = new HashMap<>();
 	private Map<String, ICommand> commands = new HashMap<>();
-	private String[] commandMultiLineCount = new String[0];
+	private Stack<String> multiLineEleStack = new Stack<>();
 
 	private int regSize = 0;
 
@@ -77,28 +78,28 @@ public final class Engine {
 	 */
 	private void commandRegister() {
 		//calc
-		commands.put("ADD", new CommandADD());//addition 
-		commands.put("SUB", new CommandSUB());//subtraction 
-		commands.put("MLT", new CommandMLT());//multiplication 
-		commands.put("DIV", new CommandDIV());//division 
-		commands.put("MOD", new CommandMOD());//mod 
-		commands.put("ABS", new CommandABS());//abs 
-		commands.put("POW", new CommandPOW());//pow 
+		this.registerCommand("ADD", new CommandADD());//addition 
+		this.registerCommand("SUB", new CommandSUB());//subtraction 
+		this.registerCommand("MLT", new CommandMLT());//multiplication 
+		this.registerCommand("DIV", new CommandDIV());//division 
+		this.registerCommand("MOD", new CommandMOD());//mod 
+		this.registerCommand("ABS", new CommandABS());//abs 
+		this.registerCommand("POW", new CommandPOW());//pow 
 		//register
-		commands.put("SET", new CommandSET());//reg set 
-		commands.put("MOV", new CommandMOV());//reg value move 
-		commands.put("SWP", new CommandSWP());//reg value swap 
-		commands.put("VAR", new CommandVAR()); //new variable
+		this.registerCommand("SET", new CommandSET());//reg value set 
+		this.registerCommand("MOV", new CommandMOV());//reg value move 
+		this.registerCommand("SWP", new CommandSWP());//reg value swap 
+		this.registerCommand("VAR", new CommandVAR()); //new variable
 		//control
-		commands.put("GOTO", new CommandGOTO());//goto 
-		commands.put("EXIT", new CommandEXIT());//exit 
+		this.registerCommand("GOTO", new CommandGOTO());//goto 
+		this.registerCommand("EXIT", new CommandEXIT());//exit 
 		//condition
-		commands.put("EQRL", new CommandEQRL(false));//equal
-		commands.put("EQRLNOT", new CommandEQRL(true));//equal not
+		this.registerCommand("EQRL", new CommandEQRL(false));//equal
+		this.registerCommand("EQRLNOT", new CommandEQRL(true));//equal not
 		//other
-		commands.put("DSP", new CommandDSP());//display(print) 
-		commands.put("EXPORT", new CommandEXPORT());//export
-		commands.put("LABEL", new CommandLABEL());
+		this.registerCommand("DSP", new CommandDSP());//display(print) 
+		this.registerCommand("EXPORT", new CommandEXPORT());//export
+		this.registerCommand("LABEL", new CommandLABEL());
 
 	}
 
@@ -128,6 +129,10 @@ public final class Engine {
 			return this.run(code.split("[;\n]"));
 		}
 
+		if (isInit) {
+			this.codes = ArrayUtils.add(this.codes, code);
+		}
+
 		if (code.length() <= 0) {
 			this.setReg("C", this.getReg("C") + 1);
 			return new int[] { 0 };
@@ -137,7 +142,7 @@ public final class Engine {
 		code = StringUtils.trim(code);
 		String[] StrArr = StringUtils.split(code);
 		commandname = StrArr[0];
-		
+
 		if (!commands.containsKey(commandname)) {
 			throwError("Command not found.");
 		}
@@ -149,16 +154,20 @@ public final class Engine {
 		}
 
 		ICommand command = commands.get(commandname);
-		
+
+		if (command instanceof CommandMultiLine) {
+			multiLineEleStack.push(this.commandname);
+		}
+
 		StrArr = ArrayUtils.subarray(StrArr, 1, StrArr.length);
-		
+
 		if (!ArrayUtils.contains(command.getArgCounts(), StrArr.length) &
 				!(command.getArgCounts() == null)) {
 			throwError("The number of arguments does not match the number of values set.");
 		} else if (StrArr.length < command.getMinArgCount()) {
 			throwError("The number of arguments does not match the number of values set.");
 		}
-		
+
 		StrArr = command.getInitResult(StrArr, this,
 				StrArr.length, isInit);
 
@@ -171,7 +180,7 @@ public final class Engine {
 		int[] convlocation = command.getNoConversionLocations();
 		StrArr = this.replaceKeyWord(StrArr, convlocation, this.commandname);
 		int[] IntArr = new int[0];
-		
+
 		for (int i = 0; i < StrArr.length; i++) {
 			if (this.hasRegName(StrArr[i])) {
 				if (this.getRegReference(StrArr[i])) {
@@ -186,14 +195,14 @@ public final class Engine {
 			}
 		}
 
-		String errorArgName = "";
-		try {
-			for (String str : StrArr) {
-				errorArgName = str;
+		for (String str : StrArr) {
+			try {
 				IntArr = ArrayUtils.add(IntArr, Integer.parseInt(str));
+			} catch (NumberFormatException e) {
+				throwError(
+						"Incorrect argument. We looked for that argument as a variable or keyword, but could not find it. \nErrorArg:"
+								+ str);
 			}
-		} catch (NumberFormatException e) {
-			throwError("Incorrect argument.\nErrorArg:" + errorArgName);
 		}
 
 		if (isExit) {
@@ -263,44 +272,36 @@ public final class Engine {
 		this.codeLen = codes.length;
 		this.codes = codes;
 		this.setReg("C", 1, true);
-		
+
 		for (ICommand command : commands.values()) {
-			command.init();
+			command.init(this);
 		}
-		isInit = true;
-		while (this.getReg("C") <= codeLen) {
-			try {
-				this.run(codes[this.getReg("C") - 1]);
-			} catch (Exception e) {
-				System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
-				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C") + "\n");
-				e.printStackTrace();
-				System.exit(0);
-			}
-			if (isExit) {
-				break;
-			}
-		}
-		this.setReg("C", 1, true);
 
 		int[] results = new int[0];
-		isInit = false;
-		results = new int[codes.length];
-		while (this.getReg("C") <= codeLen) {
-			try {
-				results = ArrayUtils.addAll(results, this.run(codes[this.getReg("C") - 1]));
-			} catch (Exception e) {
-				System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
-				System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C") + "\n");
-				e.printStackTrace();
-				System.exit(0);
+		results = new int[codeLen];
+		isInit = true;
+		for (int i = 0; i < 2; i++) {
+			while (this.getReg("C") <= codeLen) {
+				try {
+					if (isInit) {
+						this.run(codes[this.getReg("C") - 1]);
+					} else {
+						results = ArrayUtils.addAll(results, this.run(codes[this.getReg("C") - 1]));
+					}
+				} catch (Exception e) {
+					System.out.println("\nOh my god...\n" + "It looks like an error occurred in java.\n");
+					System.out.println("Code:" + codes[this.getReg("C") - 1] + "\nLine:" + this.getReg("C") + "\n");
+					e.printStackTrace();
+					System.exit(0);
+				}
+				if (isExit) {
+					break;
+				}
 			}
-			if (isExit) {
-				break;
-			}
+			isInit = false;
+			this.setReg("C", 1, true);
 		}
 		this.codeLen = 0;
-		this.setReg("C", 1, true);
 
 		return results;
 	}
@@ -565,16 +566,21 @@ public final class Engine {
 	}
 
 	/**
-	 * add command
+	 * register a command
 	 * @param commandName
 	 * @param command
 	 */
-	public void addCommand(String commandName, ICommand command) {
-		this.commands.put(commandName, command);
+	public void registerCommand(String commandName, ICommand command) {
+		this.commands.put(commandName.toUpperCase(), command);
+		command.registered(this);
 	}
 
 	public ICommand getCommand(String commandName) {
 		return commands.get(commandName);
+	}
+
+	public Map<String, ICommand> getCommands() {
+		return Maps.newHashMap(commands);
 	}
 
 	/**
