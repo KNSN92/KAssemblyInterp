@@ -8,7 +8,7 @@ import assemblylang.util.CmdStrUtil;
 
 public class CommandGOTO implements ICommand {
 
-	String label = "";
+	private String label = "";
 
 	@Override
 	public int runCommand(int[] input, Engine engine, int argCount) {
@@ -16,7 +16,7 @@ public class CommandGOTO implements ICommand {
 		if (labelPos.containsKey(label)) {
 			engine.Goto(labelPos.get(label));
 		}else {
-			engine.throwError("Label not fount.");
+			engine.throwError("Label not found.");
 		}
 		return 0;
 	}

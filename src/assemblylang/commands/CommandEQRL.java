@@ -24,7 +24,7 @@ public class CommandEQRL implements ICommand {
 				if (labelPos.containsKey(label)) {
 					engine.Goto(labelPos.get(label));
 				}else {
-					engine.throwError("Label not fount.");
+					engine.throwError("Label not found.");
 				}
 			}
 		}else {
@@ -33,7 +33,7 @@ public class CommandEQRL implements ICommand {
 				if (labelPos.containsKey(label)) {
 					engine.Goto(labelPos.get(label));
 				}else {
-					engine.throwError("Label not fount.");
+					engine.throwError("Label not found.");
 				}
 			}
 		}
