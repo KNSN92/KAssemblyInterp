@@ -31,7 +31,7 @@ public class CommandEXPORT implements ICommand {
 	}
 	
 	@Override
-	public void init() {
+	public void init(Engine engine) {
 		ExportInfos = new int[0];
 	}
 }
