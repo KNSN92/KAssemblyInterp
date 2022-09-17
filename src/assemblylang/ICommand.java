@@ -22,7 +22,9 @@ public interface ICommand {
 		return args;
 	}
 	
-	default public void init() {}
+	default public void init(Engine engine) {}
 	
 	default public void initRun(int[]input, Engine engine, int argCount) {}
+	
+	default public void registered(Engine engine) {};
 }
