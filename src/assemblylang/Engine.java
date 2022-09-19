@@ -36,6 +36,8 @@ import assemblylang.commands.CommandVAR;
 
 @SuppressWarnings("unused")
 public final class Engine {
+	
+	public static final String defaultReturnRegName = "OP";
 
 	private Map<String, Integer> Regs = new HashMap<>();
 	private Map<String, Boolean[]> RegSetting = new HashMap<>();
@@ -61,7 +63,7 @@ public final class Engine {
 	private boolean isInit = false;
 
 	public boolean isOutError = true;
-	public String[] NGWordList = { "TRUE", "FALSE", "NULL", "NIL", "NONE", "VOID", "CONST", "FINAL" };
+	public String[] keyWordList = { "TRUE", "FALSE", "NULL", "NIL", "NONE", "VOID", "CONST", "FINAL" };
 
 	/**
 	 * Constructor

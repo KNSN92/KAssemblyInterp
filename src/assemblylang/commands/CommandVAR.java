@@ -52,7 +52,7 @@ public class CommandVAR implements ICommand{
 			} else {
 				isConst = false;
 			}
-			if (args[index].matches("^[A-Za-z]\\w+$") & !ArrayUtils.contains(engine.NGWordList, args[index])) {
+			if (args[index].matches("^[A-Za-z]\\w+$") & !ArrayUtils.contains(engine.keyWordList, args[index])) {
 				VarName = args[index];
 				args = CmdStrUtil.replaceZero(args, index);
 				index++;
