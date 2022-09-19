@@ -33,7 +33,7 @@ public class CommandDIV implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return "OP";
+		return Engine.defaultReturnRegName;
 	}
 	
 	@Override

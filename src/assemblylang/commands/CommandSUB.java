@@ -29,7 +29,7 @@ public class CommandSUB implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return "OP";
+		return Engine.defaultReturnRegName;
 	}
 	
 	@Override

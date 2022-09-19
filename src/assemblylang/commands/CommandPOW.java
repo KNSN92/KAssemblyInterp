@@ -22,7 +22,7 @@ public class CommandPOW implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return "OP";
+		return Engine.defaultReturnRegName;
 	}
 
 }
