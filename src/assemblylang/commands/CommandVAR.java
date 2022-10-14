@@ -86,7 +86,7 @@ public class CommandVAR implements ICommand{
 		}else {
 			engine.addReg(VarName);
 			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
-			if(isConst)engine.setRegChange(VarName, false);
+			if(isConst)engine.setRegChange(VarName, engine.getScope(), false);
 		}
 	}
 	

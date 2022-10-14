@@ -24,7 +24,7 @@ public class CommandMOV implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return Engine.defaultReturnRegName;
+		return null;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ public class CommandABS implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return Engine.defaultReturnRegName;
+		return Engine.DEFAULT_RETURN_REG_NAME;
 	}
 
 }
