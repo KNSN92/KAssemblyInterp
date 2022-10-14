@@ -27,4 +27,6 @@ public interface ICommand {
 	default public void initRun(int[]input, Engine engine, int argCount) {}
 	
 	default public void registered(Engine engine) {};
+	
+	default public void RunWhenNotExec(Engine engine) {}
 }
