@@ -3,6 +3,7 @@ package assemblylang.util;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 public final class CmdStrUtil {
@@ -14,7 +15,7 @@ public final class CmdStrUtil {
 	 * @return 要素が一つだけ含まれていたらtrue。でなければfalse。
 	 */
 	public static boolean listOneContains(String[] list, String find) {
-		if (ArrayUtils.indexOf(list, find) == ArrayUtils.lastIndexOf(list, find)) {
+		if (ArrayUtils.contains(list,find)&ArrayUtils.indexOf(list, find) == ArrayUtils.lastIndexOf(list, find)) {
 			return true;
 		}
 		return false;
@@ -174,5 +175,29 @@ public final class CmdStrUtil {
 	
 	public static boolean containsRegex(String[] args, String regex) {
 		return CmdStrUtil.indexOfRegex(args, regex) != -1;
+	}
+	
+	/**
+	 * StringUtils.isBlackメソッドを使用して、空文字が入っている配列の最初のインデックスを返します。
+	 * @param args
+	 * @return result
+	 */
+	public static int indexOfBlank(String[] args) {
+		Validate.noNullElements(args);
+		for(int i=0;i<args.length;i++) {
+			if(StringUtils.isBlank(args[i])) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	/**
+	 * StringUtils.isBlackメソッドを使用して、空文字が入っているかを確認します。
+	 * @param args
+	 * @return result
+	 */
+	public static boolean containsBlank(String[] args) {
+		return CmdStrUtil.indexOfBlank(args) != -1;
 	}
 }

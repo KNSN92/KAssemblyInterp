@@ -1,20 +1,23 @@
 package assemblylang.commands;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
+import assemblylang.IVarType;
 
 public class CommandSWP implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
-		int savenum = engine.getReg(input[1]);
-		engine.setReg(input[1], engine.getReg(input[0]));
-		engine.setReg(input[0], savenum);
-		return 0;
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
+		Integer[] intInput = (Integer[])input;
+		int savenum = (Integer)engine.getReg(intInput[1]);
+		engine.setReg(intInput[1], engine.getReg(intInput[0]));
+		engine.setReg(intInput[0], savenum);
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -31,6 +34,16 @@ public class CommandSWP implements ICommand {
 	@Override
 	public int[] getNoConversionLocations() {
 		return new int[]{0,1};
+	}
+
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.Int};
+	}
+	
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
 	}
 
 }

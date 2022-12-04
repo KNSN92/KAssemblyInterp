@@ -5,7 +5,9 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
+import assemblylang.IVarType;
 import assemblylang.util.CmdStrUtil;
 
 public class CommandLABEL implements ICommand{
@@ -15,12 +17,12 @@ public class CommandLABEL implements ICommand{
 	private int LabelValue = 0;
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
-		return 0;
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -39,7 +41,7 @@ public class CommandLABEL implements ICommand{
 		if (isInit) {
 			if(args[0].matches("^[A-Za-z]\\w+$")) {
 				LabelName = args[0];
-				LabelValue = engine.getReg("C");
+				LabelValue = engine.getCodeCount();
 			}else {
 				engine.throwError("This is contrary to the label naming convention.");
 			}
@@ -58,8 +60,18 @@ public class CommandLABEL implements ICommand{
 	}
 	
 	@Override
-	public void initRun(int[] input, Engine engine, int argCount) {
+	public void initRun(Object[] input, Engine engine, int argCount) {
 		labelPos.put(LabelName, LabelValue);
+	}
+
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.Int};
+	}
+	
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
 	}
 
 }

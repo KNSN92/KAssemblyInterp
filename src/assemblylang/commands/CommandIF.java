@@ -8,24 +8,27 @@ import com.google.common.collect.Maps;
 
 import assemblylang.CommandMultiLine;
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
+import assemblylang.IVarType;
 
 public class CommandIF extends CommandMultiLine {
 
 	List<Boolean> AlreadyRan = Lists.newArrayList();
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 		AlreadyRan.add(false);
-		if (input[0] == 0) {
+		boolean bool = !((Boolean) input[0]);
+		if (bool) {
 			engine.setExecution(engine.getScope(), false);
 		} else {
 			AlreadyRan.set(AlreadyRan.size() - 1, true);
 		}
-		return 0;
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -38,25 +41,35 @@ public class CommandIF extends CommandMultiLine {
 	public String getReturnRegName() {
 		return null;
 	}
+	
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.Boolean};
+	}
+	
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
+	}
 
 	@Override
 	public Map<String, IEndCommand> getEndCommands() {
 		Map<String, IEndCommand> EndCommands = Maps.newHashMap();
-		EndCommands.put("ELSE", new CommandELSE());
-		EndCommands.put("ELIF", new CommandELSEIF());
-		EndCommands.put("ENDIF", new CommandENDIF());
+		EndCommands.put("else", new CommandELSE());
+		EndCommands.put("elif", new CommandELSEIF());
+		EndCommands.put("endif", new CommandENDIF());
 		return EndCommands;
 	}
 
 	public class CommandENDIF implements IEndCommand {
 
 		@Override
-		public int runCommand(int[] input, Engine engine, int argCount) {
-			return 0;
+		public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
+			return null;
 		}
 
 		@Override
-		public boolean isRunnable(int[] input, Engine engine, int argCount) {
+		public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 			return true;
 		}
 
@@ -76,18 +89,28 @@ public class CommandIF extends CommandMultiLine {
 			engine.setExecution(engine.getScope(), true);
 		}
 
+		@Override
+		public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+			return null;
+		}
+		
+		@Override
+		public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+			return EnumVarType.Void;
+		}
+
 	}
 
 	public class CommandELSE extends CommandEndMultiLine {
 
 		@Override
-		public int runCommand(int[] input, Engine engine, int argCount) {
+		public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 			engine.setExecution(engine.getScope(), !AlreadyRan.get(AlreadyRan.size() - 1));
-			return 0;
+			return null;
 		}
 
 		@Override
-		public boolean isRunnable(int[] input, Engine engine, int argCount) {
+		public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 			return true;
 		}
 
@@ -105,12 +128,22 @@ public class CommandIF extends CommandMultiLine {
 		public void RunWhenNotExec(Engine engine) {
 			engine.setExecution(engine.getScope(), !AlreadyRan.get(AlreadyRan.size() - 1));
 		}
+		
+		@Override
+		public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+			return null;
+		}
 
 		@Override
 		public Map<String, IEndCommand> getEndCommands() {
 			Map<String, IEndCommand> EndCommands = Maps.newHashMap();
-			EndCommands.put("ENDIF", new CommandENDIF());
+			EndCommands.put("endif", new CommandENDIF());
 			return EndCommands;
+		}
+		
+		@Override
+		public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+			return EnumVarType.Void;
 		}
 
 	}
@@ -118,9 +151,10 @@ public class CommandIF extends CommandMultiLine {
 	public class CommandELSEIF extends CommandEndMultiLine {
 
 		@Override
-		public int runCommand(int[] input, Engine engine, int argCount) {
+		public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 			if (!AlreadyRan.get(AlreadyRan.size() - 1)) {
-				if (input[0] == 0) {
+				boolean bool = !((Boolean) input[0]);
+				if (bool) {
 					engine.setExecution(engine.getScope(), false);
 				} else {
 					AlreadyRan.set(AlreadyRan.size() - 1, true);
@@ -128,11 +162,11 @@ public class CommandIF extends CommandMultiLine {
 			}else {
 				engine.setExecution(engine.getScope(), false);
 			}
-			return 0;
+			return null;
 		}
 
 		@Override
-		public boolean isRunnable(int[] input, Engine engine, int argCount) {
+		public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 			return true;
 		}
 
@@ -155,13 +189,23 @@ public class CommandIF extends CommandMultiLine {
 		@Override
 		public void RunWhenNotExec(Engine engine) {
 		}
+		
+		@Override
+		public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+			return new IVarType[]{EnumVarType.Boolean};
+		}
+		
+		@Override
+		public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+			return EnumVarType.Void;
+		}
 
 		@Override
 		public Map<String, IEndCommand> getEndCommands() {
 			Map<String, IEndCommand> EndCommands = Maps.newHashMap();
-			EndCommands.put("ELSE", new CommandELSE());
-			EndCommands.put("ELIF", new CommandELSEIF());
-			EndCommands.put("ENDIF", new CommandENDIF());
+			EndCommands.put("else", new CommandELSE());
+			EndCommands.put("elif", new CommandELSEIF());
+			EndCommands.put("endif", new CommandENDIF());
 			return EndCommands;
 		}
 	}

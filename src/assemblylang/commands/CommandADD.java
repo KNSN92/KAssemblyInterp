@@ -1,16 +1,40 @@
 package assemblylang.commands;
 
-import java.util.Arrays;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
+import assemblylang.IVarType;
 
 public class CommandADD implements ICommand {
 
 	@Override
-	public int runCommand(int[]input, Engine engine, int argCount) {
-		return Arrays.stream(input).sum();
-		
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
+		if (!ArrayUtils.contains(argTypes, EnumVarType.String)) {
+			double[] floatObj = new double[0];
+			for (Object obj : input) {
+				floatObj = ArrayUtils.add(floatObj,
+						obj instanceof Double ? (Double) obj : (Double) (double) (long) (Long) obj);
+			}
+			double result = 0D;
+			for (double in : floatObj) {
+				result += in;
+			}
+
+			if (ArrayUtils.contains(argTypes, EnumVarType.Float)) {
+				return result;
+			} else {
+				return ((Long) (long) result);
+			}
+		}else {
+			String[] strObj = new String[0];
+			for (Object obj : input) {
+				strObj = ArrayUtils.add(strObj,obj.toString());
+			}
+			return StringUtils.join(strObj);
+		}
 	}
 
 	@Override
@@ -19,7 +43,7 @@ public class CommandADD implements ICommand {
 	}
 
 	@Override
-	public boolean isRunnable(int[]input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -27,10 +51,29 @@ public class CommandADD implements ICommand {
 	public String getReturnRegName() {
 		return Engine.DEFAULT_RETURN_REG_NAME;
 	}
-	
+
 	@Override
 	public int getMinArgCount() {
 		return 2;
 	}
 
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		IVarType[] returnTypes = new EnumVarType[argCount];
+		for (int i = 0; i < argCount; i++) {
+			if (argTypes[i] == EnumVarType.Int || argTypes[i] == EnumVarType.Float
+					|| argTypes[i] == EnumVarType.String) {
+				returnTypes[i] = argTypes[i];
+			} else {
+				returnTypes[i] = EnumVarType.Int;
+			}
+		}
+		return returnTypes;
+	}
+
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		EnumVarType type = ArrayUtils.contains(argTypes, EnumVarType.String) ? EnumVarType.String: ArrayUtils.contains(argTypes, EnumVarType.Float) ? EnumVarType.Float : EnumVarType.Int;
+		return type;
+	}
 }

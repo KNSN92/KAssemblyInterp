@@ -1,18 +1,20 @@
 package assemblylang.commands;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
+import assemblylang.IVarType;
 
 public class CommandEXIT implements ICommand {
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 		engine.Exit();
-		return 0;
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -27,8 +29,13 @@ public class CommandEXIT implements ICommand {
 	}
 
 	@Override
-	public int getMinArgCount() {
-		return 0;
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.Int};
+	}
+
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
 	}
 	
 	

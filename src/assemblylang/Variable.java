@@ -2,32 +2,44 @@ package assemblylang;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.Validate;
+
+import assemblylang.util.VariableTypeUtils;
+
 public class Variable<T> {
 	
 	private T val;
+	private EnumVarType type;
 	private boolean changeable;
 	private boolean referable;
 	
-	public Variable(T val, boolean changeable, boolean referable) {
+	public Variable(T val, EnumVarType type, boolean changeable, boolean referable) {
 		this.val = val;
 		this.changeable = changeable;
 		this.referable = referable;
 	}
 	
 	public Variable(T val) {
-		this(val, true, true);
+		this(val, VariableTypeUtils.toEnumVarType(val), true, true);
 	}
 	
 	public Variable(T val, boolean changeable) {
-		this(val, changeable, true);
+		this(val, VariableTypeUtils.toEnumVarType(val), changeable, true);
 	}
 
 	public T getValue() {
 		return val;
 	}
+	
+	public EnumVarType getType() {
+		return type;
+	}
 
-	public void setValue(T val) {
-		this.val = val;
+	@SuppressWarnings("unchecked")
+	public void setValue(Object value) {
+		if(value instanceof Integer) value = (long)(int)value;
+		Validate.isInstanceOf(this.val.getClass(), value);
+		this.val = (T)value;
 	}
 
 	public boolean isChangeable() {

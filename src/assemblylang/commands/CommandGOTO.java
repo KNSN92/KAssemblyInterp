@@ -1,9 +1,11 @@
-package assemblylang.commands;
+ package assemblylang.commands;
 
 import java.util.Map;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
+import assemblylang.IVarType;
 import assemblylang.util.CmdStrUtil;
 
 public class CommandGOTO implements ICommand {
@@ -11,18 +13,18 @@ public class CommandGOTO implements ICommand {
 	private String label = "";
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 		Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
 		if (labelPos.containsKey(label)) {
 			engine.Goto(labelPos.get(label));
 		}else {
 			engine.throwError("Label not found.");
 		}
-		return 0;
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -42,6 +44,16 @@ public class CommandGOTO implements ICommand {
 		label = args[0];
 		args = CmdStrUtil.replaceZero(args,0);
 		return args;
+	}
+
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.Int};
+	}
+
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
 	}
 
 }

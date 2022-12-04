@@ -2,7 +2,6 @@ package assemblylang.util.Deprecated;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Triple;
@@ -68,9 +67,9 @@ public final class SyntaxChecker {
 		return false;
 	}
 
-	public String[] syntaxCheckAndRun(String[] args, Engine engine, Map<String, ?> customValueMap, int argCount) {
+	public String[] syntaxCheckAndRun(String[] args, Engine engine, int argCount) {
 		if (this.syntaxCheck(args)) {
-			return this.getSyntaxCheckFunc(args).run(args, engine, customValueMap, argCount);
+			return this.getSyntaxCheckFunc(args).run(args, engine, argCount);
 		}
 
 		return null;

@@ -2,11 +2,15 @@ package assemblylang;
 
 public interface ICommand {
 	
-	public int runCommand(int[]input, Engine engine, int argCount);
+	public Object runCommand(Object[]input, Engine engine, IVarType[] argTypes, int argCount);
 	
-	public boolean isRunnable(int[]input, Engine engine, int argCount);
+	public boolean isRunnable(Object[]input, Engine engine, int argCount);
 	
 	public int[] getArgCounts();
+	
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount);
+	
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount);
 	
 	public String getReturnRegName();
 	
@@ -24,7 +28,7 @@ public interface ICommand {
 	
 	default public void init(Engine engine) {}
 	
-	default public void initRun(int[]input, Engine engine, int argCount) {}
+	default public void initRun(Object[]input, Engine engine, int argCount) {}
 	
 	default public void registered(Engine engine) {};
 	

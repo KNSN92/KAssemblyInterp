@@ -3,21 +3,23 @@ package assemblylang.commands;
 import java.util.Map;
 
 import assemblylang.Engine;
+import assemblylang.EnumVarType;
 import assemblylang.ICommand;
-import assemblylang.util.CmdStrUtil;
+import assemblylang.IVarType;
 
-public class CommandEQRL implements ICommand {
+public class CommandEQRLGOTO implements ICommand {
 
 	private String label = "";
 	
 	private boolean not = false;
 	
-	public CommandEQRL(boolean not) {
+	public CommandEQRLGOTO(boolean not) {
 		this.not = not;
 	}
 
 	@Override
-	public int runCommand(int[] input, Engine engine, int argCount) {
+	public Object runCommand(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
+		label = input[0].toString();
 		if(not) {
 			if(input[1]!=input[2]) {
 				Map<String, Integer> labelPos = ((CommandLABEL) engine.getCommand("LABEL")).labelPos;
@@ -37,11 +39,11 @@ public class CommandEQRL implements ICommand {
 				}
 			}
 		}
-		return 0;
+		return null;
 	}
 
 	@Override
-	public boolean isRunnable(int[] input, Engine engine, int argCount) {
+	public boolean isRunnable(Object[] input, Engine engine, int argCount) {
 		return true;
 	}
 
@@ -52,15 +54,17 @@ public class CommandEQRL implements ICommand {
 
 	@Override
 	public String getReturnRegName() {
-		return Engine.DEFAULT_RETURN_REG_NAME;
+		return null;
 	}
-	
-	@Override
-	public String[] getInitResult(String[] args, Engine engine, int argCount, boolean isInit) {
 
-		label  = args[0];
-		args = CmdStrUtil.replaceZero(args,0);
-		return args;
+	@Override
+	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
+		return new IVarType[]{EnumVarType.String,argTypes[1],argTypes[1]};
+	}
+
+	@Override
+	public IVarType getReturnVarType(IVarType[] argTypes, IVarType resultType, Engine engine, int argCount) {
+		return EnumVarType.Void;
 	}
 
 }
