@@ -1,0 +1,99 @@
+dsp "#test"
+
+dsp 1 #1を表示。
+
+if true
+	dsp 2
+endif
+
+if false
+	dsp 3
+else
+	dsp 4
+endif
+
+if false
+	dsp 5
+elif true
+	dsp 6
+	var string k "h~~j(?)"
+else
+	dsp 7
+endif
+
+dsp #改行
+
+var int Count 10 #count変数を作成。10で初期化。
+while Count #数字型だけど問題なし。
+	dsp Count
+	sub Count 1 #引き算count変数から1を引く。答えは最初から用意されているop変数に代入。
+	set Count OP #op変数の内容をcount変数にコピー。
+endwhile
+
+dsp
+dsp "Hello World!!"
+dsp 1.123
+dsp true
+dsp false
+
+var string hello "Hello!! こんにちは〜"
+add 1 1
+
+dsp hello
+
+var boolean h true
+dsp h
+
+set h true
+
+if h
+	dsp "if scsess"
+endif
+
+add 1.11 11
+pow 1.1 2
+abs -10
+mod 6 4
+mod 6 0
+#div 5 0
+div 5 2 2 2 2 2 2 2 2
+#div 1 1 1 "a" 2 2
+add 1 1 1 1.1 1 2.2 -100
+dsp f: add f: add 1 f: sub 1 2 : 2 3 4 : 1 1 1 1 : #これを実行出来るようにする！
+
+add 1 1 1
+dsp OP
+dsp f: add 1 1 :
+dsp
+dsp "or:" f:or true false false:
+dsp "or:" f:or false false false:
+dsp
+dsp "and:" f:and true true true:
+dsp "and:" f:and true true false:
+dsp
+dsp "xor:" f:xor false true false:
+dsp "xor:" f:xor true true false:
+dsp
+dsp "nor:" f:nor true false false:
+dsp "nor:" f:nor false false false:
+dsp
+dsp "nand:" f:nand true true true:
+dsp "nand:" f:nand true true false:
+dsp
+dsp "xnor:" f:xnor false true false:
+dsp "xnor:" f:xnor true true false:
+dsp
+dsp f: add "The character you typed is [ " f:input "pls type here!!" : " ] .":
+
+dsp "Int to Boolean result:" f:select f:eq f:int f:input "type here!!":: 0:false true:
+
+dsp f:add f:int "122": 1:
+dsp f:str 122: 1
+
+#var int r1 f:input "type1":
+#var int r2 f:input "type2":
+if f:eq f:input "type1": f:input "type2"::
+	dsp "safe!!"
+else
+	dsp "no!!"
+endif

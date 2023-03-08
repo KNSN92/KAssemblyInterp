@@ -1,0 +1,11 @@
+
+var int haveMoney f: input int "Please enter the amount in your possession." :
+
+var int inputResult1 f: input int "Enter the price of the first manjuu." :
+var int inputResult2 f: input int "Enter the price of the second manjuu." :
+
+var boolean equalResult f: lt inputResult1 inputResult2 : #lt は < のこと。分かりにくいから近々変更する予定。でも普通に大なり小なりの記号にすると見た感じがおかしくなりそうだから難しい...
+
+var int minManjuPrice f: select equalResult inputResult1 inputResult2 : #selectは三項演算子みたいなもん。
+
+dsp "result: " f: int f: div haveMoney minManjuPrice ::

@@ -1,0 +1,11 @@
+
+function int ori_sub int i1 int i2
+	return f:sub i1 i2:
+endfunc
+
+function int sub2 int i1 int i2 int i3
+	var int sub1 f:ori_sub i1 i2:
+	return f:ori_sub sub1 i3:
+endfunc
+
+nativefunc "java.lang.Long" "parseLong" string "strToInt"
