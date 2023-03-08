@@ -33,13 +33,13 @@ public class CommandEXPORT implements ICommand {
 	}
 	
 	@Override
-	public void init(Engine engine) {
-		ExportInfos = new Integer[0];
+	public void init(Engine engine, String[] codes) {
+		ExportInfos = new Object[0];
 	}
 
 	@Override
 	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
-		return new IVarType[]{EnumVarType.Int};
+		return new IVarType[]{EnumVarType.None};
 	}
 
 	@Override

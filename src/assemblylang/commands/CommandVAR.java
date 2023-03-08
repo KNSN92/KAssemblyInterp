@@ -15,6 +15,7 @@ public class CommandVAR implements ICommand{
 	String VarName = "";
 	EnumVarType Type = EnumVarType.None;
 	int useNumIndex = -1;
+	int autoSystemIndex = -1;
 	boolean toDecimal = false;
 	boolean isConst = false;
 	@Override
@@ -22,7 +23,7 @@ public class CommandVAR implements ICommand{
 		if (engine.hasRegName(VarName)) {
 			engine.throwError("The variable name already exists.\n"+"VarName:"+VarName);
 		}else {
-			engine.addReg(VarName, Type);
+			engine.addReg(VarName, Type==EnumVarType.None ? argTypes[autoSystemIndex] : Type);
 			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
 			if(isConst)engine.setRegChange(VarName, engine.getScope(), false);
 		}
@@ -68,7 +69,10 @@ public class CommandVAR implements ICommand{
 			}
 			args = CmdStrUtil.replaceZero(args, index);
 			index++;
-		}else {
+		} else if(args[index].equals("auto")) {
+			Type = EnumVarType.None;
+			index++;
+		} else {
 			engine.throwError("Variable type must be specified.");
 			return args;
 		}
@@ -82,8 +86,8 @@ public class CommandVAR implements ICommand{
 			return args;
 		}
 		if (isConst ? argCount == 4 : argCount == 3) {
-			EnumVarType type = VariableTypeUtils.ParseType(args[index]);
-			if (type != EnumVarType.None & Type == type) {
+			EnumVarType type = VariableTypeUtils.parseType(args[index]);
+			if (type == EnumVarType.None || Type == type) {
 				useNumIndex = index;
 				index++;
 			} else {
@@ -97,11 +101,11 @@ public class CommandVAR implements ICommand{
 	}
 
 	@Override
-	public void initRun(Object[] input, Engine engine, int argCount) {
+	public void initRun(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 		if (engine.hasRegName(VarName)) {
 			engine.throwError("The variable name already exists.\n"+"VarName:"+VarName);
 		}else {
-			engine.addReg(VarName, Type);
+			engine.addReg(VarName, Type==EnumVarType.None ? argTypes[autoSystemIndex] : Type);
 			if(useNumIndex != -1)engine.setReg(VarName, input[useNumIndex]);
 			if(isConst)engine.setRegChange(VarName, engine.getScope(), false);
 		}
@@ -109,7 +113,11 @@ public class CommandVAR implements ICommand{
 
 	@Override
 	public IVarType[] getArgVarTypes(IVarType[] argTypes, Engine engine, int argCount) {
-		return new IVarType[]{EnumVarType.None,EnumVarType.None,EnumVarType.None};
+		IVarType[] argVarTypes = new IVarType[0];
+		for(int i = 0; i < argTypes.length; i++) {
+			argVarTypes = ArrayUtils.add(argVarTypes,EnumVarType.None);
+		}
+		return argVarTypes;
 	}
 	
 	@Override

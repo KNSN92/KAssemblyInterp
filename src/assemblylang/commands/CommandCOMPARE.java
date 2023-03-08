@@ -7,16 +7,16 @@ import assemblylang.EnumVarType;
 import assemblylang.ICommand;
 import assemblylang.IVarType;
 
-public class CommandCompare implements ICommand {
+public class CommandCOMPARE implements ICommand {
 	
 	private BiPredicate<Double, Double> compare;
 	private boolean not;
 	
-	public CommandCompare(BiPredicate<Double,Double> compare) {
+	public CommandCOMPARE(BiPredicate<Double,Double> compare) {
 		this(compare, false);
 	}
 	
-	public CommandCompare(BiPredicate<Double, Double> compare, boolean not) {
+	public CommandCOMPARE(BiPredicate<Double, Double> compare, boolean not) {
 		this.compare = compare;
 		this.not = not;
 	}

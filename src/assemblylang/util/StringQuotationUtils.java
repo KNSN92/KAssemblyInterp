@@ -14,7 +14,7 @@ public final class StringQuotationUtils {
 	
 	public static boolean isStringFormat(String str) {
 		String inStr = str.trim();
-		if(inStr.charAt(0)=='"' & inStr.charAt(inStr.length()-1)=='"'){
+		if(inStr.charAt(0)=='"' & inStr.charAt(inStr.length()-1)=='"' & inStr.length() >= "\"\"".length()){
 			inStr = inStr.substring(1, inStr.length()-1);
 			char previousCharacter = 0;
 			boolean isPreviousCharacterBackSlash = false;
@@ -44,7 +44,7 @@ public final class StringQuotationUtils {
 	
 		boolean inQuatations = false;
 		for (int i = 0; i < index; i++)
-			if (arg.charAt(index) == '"')
+			if (arg.charAt(i) == '"')
 				inQuatations = !inQuatations;
 	
 		return inQuatations;
@@ -80,6 +80,28 @@ public final class StringQuotationUtils {
 		String result = "\""+arg+"\"";
 		Validate.isTrue(isStringFormat(result));
 		return result;
+	}
+	
+	public static int indexOfNotInQuoted(String arg, String find) {
+		if(arg.isEmpty()) return -1;
+		if(!arg.contains(find)) return -1;
+		int index = arg.indexOf(find);
+		while(isInQuatations(arg, index)) {
+			index = arg.indexOf(find, index+1);
+			if(index == -1) return -1;
+		}
+		return index;
+	}
+	
+	public static int lastIndexOfNotInQuoted(String arg, String find) {
+		if(arg.isEmpty()) return -1;
+		if(!arg.contains(find)) return -1;
+		int index = arg.lastIndexOf(find);
+		while(isInQuatations(arg, index)) {
+			index = arg.lastIndexOf(find, index-1);
+			if(index == -1) return -1;
+		}
+		return index;
 	}
 	
 }

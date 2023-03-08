@@ -55,12 +55,12 @@ public class CommandLABEL implements ICommand{
 	}
 	
 	@Override
-	public void init(Engine engine) {
+	public void init(Engine engine, String[] codes) {
 		labelPos = Maps.newHashMap();
 	}
 	
 	@Override
-	public void initRun(Object[] input, Engine engine, int argCount) {
+	public void initRun(Object[] input, Engine engine, IVarType[] argTypes, int argCount) {
 		labelPos.put(LabelName, LabelValue);
 	}
 

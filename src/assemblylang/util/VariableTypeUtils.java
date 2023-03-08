@@ -32,7 +32,7 @@ public final class VariableTypeUtils {
 						: null))));
 	}
 
-	public static EnumVarType ParseType(String arg) {
+	public static EnumVarType parseType(String arg) {
 		if(arg==null) return EnumVarType.None;
 		EnumVarType type = EnumVarType.None;
 		for (Map.Entry<EnumVarType, Function<String, ?>> entry : convTypes) {
@@ -43,7 +43,7 @@ public final class VariableTypeUtils {
 		return EnumVarType.None;
 	}
 
-	public static Object Parse(String arg) {
+	public static Object parse(String arg) {
 		Object result = null;
 		for (Map.Entry<EnumVarType, Function<String, ?>> entry : convTypes) {
 			result = entry.getValue().apply(arg);
@@ -53,8 +53,8 @@ public final class VariableTypeUtils {
 		return arg;
 	}
 	
-	public static boolean isParsable(String arg) {
-		return ParseType(arg) != EnumVarType.None;
+	public static boolean parsable(String arg) {
+		return parseType(arg) != EnumVarType.None;
 	}
 	
 	public static EnumVarType toEnumVarType(Object obj) {
@@ -82,7 +82,7 @@ public final class VariableTypeUtils {
 	public static EnumVarType toEnumVarTypeFromClass(Class<?> type) {
 		Validate.notNull(type);
 		for(EnumVarType enumVarType : EnumVarType.values()) {
-			if(enumVarType.innerClass().equals(type)) {
+			if(enumVarType.innerClass() != null && enumVarType.innerClass().equals(type)) {
 				 return enumVarType;
 			}
 		}
@@ -109,8 +109,9 @@ public final class VariableTypeUtils {
 		return -1;
 	}
 	
-	public static boolean objectEquals(EnumVarType type, Object obj) {
+	public static boolean objectEquals(IVarType type, Object obj) {
 		if(type == EnumVarType.None) throw new IllegalArgumentException("EnumVarType.None is not allowed to be used with this method.");
+		if(type != EnumVarType.Void && obj==null) return false;
 		return type == EnumVarType.Void ? obj==null : type.innerClass() == obj.getClass();
 	}
 	

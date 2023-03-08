@@ -26,11 +26,13 @@ public interface ICommand {
 		return args;
 	}
 	
-	default public void init(Engine engine) {}
+	default public void init(Engine engine, String[] codes) {}
 	
-	default public void initRun(Object[]input, Engine engine, int argCount) {}
+	default public void initRun(Object[]input, Engine engine, IVarType[] argTypes, int argCount) {}
 	
 	default public void registered(Engine engine) {};
 	
 	default public void RunWhenNotExec(Engine engine) {}
+	
+	default public void contentExecutingIf(Engine engine, String code) {}
 }

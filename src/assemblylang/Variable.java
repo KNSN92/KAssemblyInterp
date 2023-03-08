@@ -6,28 +6,28 @@ import org.apache.commons.lang3.Validate;
 
 import assemblylang.util.VariableTypeUtils;
 
-public class Variable<T> {
+public class Variable {
 	
-	private T val;
+	private Object val;
 	private EnumVarType type;
 	private boolean changeable;
 	private boolean referable;
 	
-	public Variable(T val, EnumVarType type, boolean changeable, boolean referable) {
+	public Variable(Object val, EnumVarType type, boolean changeable, boolean referable) {
 		this.val = val;
 		this.changeable = changeable;
 		this.referable = referable;
 	}
 	
-	public Variable(T val) {
+	public Variable(Object val) {
 		this(val, VariableTypeUtils.toEnumVarType(val), true, true);
 	}
 	
-	public Variable(T val, boolean changeable) {
+	public Variable(Object val, boolean changeable) {
 		this(val, VariableTypeUtils.toEnumVarType(val), changeable, true);
 	}
 
-	public T getValue() {
+	public Object getValue() {
 		return val;
 	}
 	
@@ -35,11 +35,10 @@ public class Variable<T> {
 		return type;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void setValue(Object value) {
 		if(value instanceof Integer) value = (long)(int)value;
 		Validate.isInstanceOf(this.val.getClass(), value);
-		this.val = (T)value;
+		this.val = (Object)value;
 	}
 
 	public boolean isChangeable() {
@@ -81,7 +80,7 @@ public class Variable<T> {
 		if (!(obj instanceof Variable)) {
 			return false;
 		}
-		Variable<?> other = (Variable<?>) obj;
+		Variable other = (Variable) obj;
 		return changeable == other.changeable && referable == other.referable && Objects.equals(val, other.val);
 	}
 	

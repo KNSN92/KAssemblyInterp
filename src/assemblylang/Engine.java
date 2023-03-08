@@ -3,6 +3,8 @@ package assemblylang;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
@@ -23,24 +27,32 @@ import assemblylang.CommandMultiLine.IEndCommand;
 import assemblylang.commands.CommandABS;
 import assemblylang.commands.CommandADD;
 import assemblylang.commands.CommandAND;
-import assemblylang.commands.CommandCompare;
+import assemblylang.commands.CommandCOMPARE;
 import assemblylang.commands.CommandDIV;
 import assemblylang.commands.CommandDSP;
+import assemblylang.commands.CommandEQ;
 import assemblylang.commands.CommandEQRLGOTO;
 import assemblylang.commands.CommandEXIT;
 import assemblylang.commands.CommandEXPORT;
+import assemblylang.commands.CommandFLOAT;
+import assemblylang.commands.CommandFUNCTION;
 import assemblylang.commands.CommandGOTO;
 import assemblylang.commands.CommandIF;
+import assemblylang.commands.CommandIMPORT;
 import assemblylang.commands.CommandINPUT;
+import assemblylang.commands.CommandINT;
 import assemblylang.commands.CommandLABEL;
 import assemblylang.commands.CommandMLT;
 import assemblylang.commands.CommandMOD;
 import assemblylang.commands.CommandMOV;
+import assemblylang.commands.CommandNATIVEFUNC;
 import assemblylang.commands.CommandNOT;
 import assemblylang.commands.CommandOR;
 import assemblylang.commands.CommandPOW;
+import assemblylang.commands.CommandRETURN;
 import assemblylang.commands.CommandSELECT;
 import assemblylang.commands.CommandSET;
+import assemblylang.commands.CommandSTR;
 import assemblylang.commands.CommandSUB;
 import assemblylang.commands.CommandSWP;
 import assemblylang.commands.CommandVAR;
@@ -49,6 +61,7 @@ import assemblylang.commands.CommandXOR;
 import assemblylang.commands.joke.Command0401;
 import assemblylang.commands.joke.CommandHALLOWEEN;
 import assemblylang.util.CmdStrUtil;
+import assemblylang.util.StringQuotationUtils;
 import assemblylang.util.VariableTypeUtils;
 
 @SuppressWarnings("unused")
@@ -58,18 +71,28 @@ public final class Engine {
 	public static final int GLOBAL_SCOPE = -1;
 
 	//datas
-	private Table<Integer, String, Variable<?>> Regs = HashBasedTable.create();
-	private List<Boolean> ScopeNotExecutionInfo = Lists.newArrayList();
+	private Table<Integer, String, Variable> Regs = HashBasedTable.create();
+	private List<Pair<Boolean,Boolean>> ScopeNotExecutionInfo = Lists.newArrayList();//left:execution right:non syntax check
 	private List<String> MultiLineCmdHeadStr = Lists.newArrayList();
 	private List<String> RegNames = Lists.newArrayList();
 	private Map<String, Integer> RegIDs = Maps.newHashMap();
 	private Map<String, ICommand> commands = Maps.newHashMap();
+
+	private Map<String, Variable> defaultRegs = Maps.newHashMap();
+	
+	private List<String> skipCommands = Lists.newArrayList();
+	private boolean skipConditionReverse = false; // false = while list true = black list
+	
+	private Engine _super = null;
+	
+	private Path startingPath = Paths.get(FileUtils.getUserDirectoryPath());
 
 	//run first data
 	private String[] codes = ArrayUtils.EMPTY_STRING_ARRAY;
 	private String code = "";
 	private String commandname = "";
 	private int codeLen = 0;
+	private String[] notFoundedCommands = ArrayUtils.EMPTY_STRING_ARRAY;
 
 	//error
 	private String lastErrorMessage = "";
@@ -92,6 +115,7 @@ public final class Engine {
 	private boolean isInit = false;
 	private boolean isRecursiveExec = false;
 
+	//public non const var
 	public boolean isOutError = true;
 	public String[] keyWordList = { "true", "false", "null", "nil", "none", "void", "const", "final" };
 
@@ -104,22 +128,44 @@ public final class Engine {
 		commandRegister();
 		init();
 	}
-	
-	public Engine(Engine engine) {
+
+	public static Engine createExecuter(Engine _super, Map<String, Variable> defaultRegs) {
+		Engine engine = new Engine();
+		if(defaultRegs != null) {
+			if(defaultRegs.containsKey("C")) {
+				defaultRegs.remove("C");
+			}
+			if(defaultRegs.containsKey(Engine.DEFAULT_RETURN_REG_NAME)) {
+				defaultRegs.remove(Engine.DEFAULT_RETURN_REG_NAME);
+			}
+			engine.defaultRegs = defaultRegs;
+		}
+		Map<String, ICommand> commands = engine.getCommands();
+		for(String cmdName : _super.getCommands().keySet()) {
+			if(!commands.containsKey(cmdName)) {
+				engine.registerCommand(cmdName, _super.getCommand(cmdName));
+			}
+		}
+		engine.initRegMap();
+		engine._super = _super;
+		engine.startingPath = _super.startingPath;
+		return engine;
+	}
+
+	/*public Engine(Engine engine) {
 		Table<Integer, String, Variable<?>> Regs = HashBasedTable.create(engine.Regs);
-		Regs.remove(Engine.GLOBAL_SCOPE, "C");
+		Regs.put(Engine.GLOBAL_SCOPE, "C", this.Regs.get(Engine.GLOBAL_SCOPE, "C"));
 		this.Regs = Regs;
 		
 		List<String> RegNames = Lists.newArrayList(engine.RegNames);
-		RegNames.remove(RegNames.indexOf("C"));
 		this.RegNames = RegNames;
 		
 		Map<String, Integer> RegIDs = Maps.newHashMap(engine.RegIDs);
-		RegIDs.remove("C");
 		this.RegIDs = RegIDs;
 		
 		this.commands = Maps.newHashMap(engine.commands);
-	}
+		
+	}*/
 
 	/**
 	 * Register a CommandMap
@@ -134,12 +180,12 @@ public final class Engine {
 		this.registerCommand("abs", new CommandABS());//abs
 		this.registerCommand("pow", new CommandPOW());//pow
 		//CommandCompare
-		this.registerCommand("eq", new CommandCompare((l,r)->l.equals(r)));//equals
-		this.registerCommand("eqnot", new CommandCompare((l,r)-> !l.equals(r)));//equals not
-		this.registerCommand("lt", new CommandCompare((l,r)-> l < r));//less than
-		this.registerCommand("gt", new CommandCompare((l,r)-> l > r));//greater than
-		this.registerCommand("lteq", new CommandCompare((l,r)-> l <= r));//less than or equal to
-		this.registerCommand("gteq", new CommandCompare((l,r)-> l >= r));//less than or equal to
+		this.registerCommand("eq", new CommandEQ(false));//equals
+		this.registerCommand("eqnot", new CommandEQ(true));//equals not
+		this.registerCommand("lt", new CommandCOMPARE((l, r) -> l < r));//less than <
+		this.registerCommand("gt", new CommandCOMPARE((l, r) -> l > r));//greater than >
+		this.registerCommand("lteq", new CommandCOMPARE((l, r) -> l <= r));//less than or equal to <=
+		this.registerCommand("gteq", new CommandCOMPARE((l, r) -> l >= r));//less than or equal to >=
 		//bool calc
 		this.registerCommand("not", new CommandNOT());//not
 		this.registerCommand("or", new CommandOR(false));//or
@@ -162,20 +208,29 @@ public final class Engine {
 		this.registerCommand("equal", new CommandEQRLGOTO(false));//equal
 		this.registerCommand("equalnot", new CommandEQRLGOTO(true));//equal not
 		this.registerCommand("if", new CommandIF());//if
+		//function
+		this.registerCommand("function", new CommandFUNCTION());//function
+		this.registerCommand("return", new CommandRETURN());//return
 		//other
 		this.registerCommand("dsp", new CommandDSP());//display(print)
 		this.registerCommand("export", new CommandEXPORT());//export
 		this.registerCommand("label", new CommandLABEL());//label
 		this.registerCommand("input", new CommandINPUT());//input
 		this.registerCommand("select", new CommandSELECT());//select
+		this.registerCommand("str", new CommandSTR());//toString
+		this.registerCommand("int", new CommandINT());//toInt
+		this.registerCommand("float", new CommandFLOAT());//toFloat
+		this.registerCommand("import", new CommandIMPORT());//import from other file
+		this.registerCommand("nativefunc", new CommandNATIVEFUNC());//register function from java static method.
 		//joke
-		this.registerCommand("APRIL", new Command0401());
-		this.registerCommand("HALLOWEEN", new CommandHALLOWEEN());
+		this.registerCommand("april", new Command0401());
+		this.registerCommand("halloween", new CommandHALLOWEEN());
 
 	}
 
 	private void init() {
-		ScopeNotExecutionInfo.add(true);
+		ScopeNotExecutionInfo.clear();
+		ScopeNotExecutionInfo.add(MutablePair.of(true,false));
 	}
 
 	/**
@@ -188,7 +243,11 @@ public final class Engine {
 		this.isRunningNow = true;
 		this.code = code;
 		this.codes[this.getCodeCount() - 1] = this.code;
-		
+
+		for (String cmdName : MultiLineCmdHeadStr) {
+			commands.get(cmdName).contentExecutingIf(this, code);
+		}
+
 		code = cutComment(code);
 
 		if (code.contains("\n") || code.contains(";")) {
@@ -201,6 +260,8 @@ public final class Engine {
 		if (isInit) {
 			this.codes = ArrayUtils.add(this.codes, code);
 		}
+		
+		code = StringUtils.trim(code);
 
 		if (code.length() <= 0) {
 			this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() + 1L, true);
@@ -208,13 +269,33 @@ public final class Engine {
 		}
 
 		//code = code.toUpperCase();
-		code = StringUtils.trim(code);
 		String[] StrArr = this.splitCode(code, false);
 		StrArr = removeBlank(StrArr);
 		commandname = StrArr[0];
+		
+		if(this.isSkipCommand(commandname)) {
+			this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() + 1L, true);
+			return new Object[0];
+		}
+		
+		if(ScopeNotExecutionInfo.stream().anyMatch(pair->pair.getRight())) {
+			if (MultiLineCmdHeadStr.size()<=0) {
+				this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() + 1L, true);
+				return new Object[0];
+			}else {
+				CommandMultiLine lastMultCmd = (CommandMultiLine) this
+						.getCommand(MultiLineCmdHeadStr.get(MultiLineCmdHeadStr.size() - 1));
+				if (!lastMultCmd.getEndCommands().containsKey(commandname)) {
+					this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() + 1L, true);
+					return new Object[0];
+				} 
+			}
+		}
 
 		if (!commands.containsKey(commandname)) {
-			throwError("Command not found.\nCommandName: " + commandname);
+			this.notFoundedCommands = ArrayUtils.add(this.notFoundedCommands, commandname);
+			this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() + 1L, true);
+			return new Object[0];
 		}
 
 		ICommand command = commands.get(commandname);
@@ -240,8 +321,8 @@ public final class Engine {
 		EnumVarType[] types = new EnumVarType[0];
 
 		for (int i = 0; i < StrArr.length; i++) {
-			types = ArrayUtils.add(types, VariableTypeUtils.ParseType(StrArr[i]));
-			Args = ArrayUtils.add(Args, VariableTypeUtils.Parse(StrArr[i]));
+			types = ArrayUtils.add(types, VariableTypeUtils.parseType(StrArr[i]));
+			Args = ArrayUtils.add(Args, VariableTypeUtils.parse(StrArr[i]));
 		}
 
 		if (ArrayUtils.contains(types, EnumVarType.None)) {
@@ -256,7 +337,7 @@ public final class Engine {
 		Object result = null;
 
 		if (isInit) {
-			result = initRunning(command, Args, types, result);
+			result = initRunning(command, Args, types, argTypes, result);
 		} else {
 
 			result = runProcessing(command, Args, types, argTypes, result);
@@ -286,8 +367,6 @@ public final class Engine {
 		return new Object[] { result };
 	}
 
-
-
 	/**
 	 * running code multi line
 	 * @param codes
@@ -314,9 +393,11 @@ public final class Engine {
 
 			this.codeLen = codes.length;
 			this.codes = codes;
-
-			for (ICommand command : commands.values()) {
-				command.init(this);
+			
+			this.notFoundedCommands = ArrayUtils.EMPTY_STRING_ARRAY;
+			
+			for (ICommand command : Maps.newHashMap(commands).values()) {
+				command.init(this, codes);
 			}
 		}
 
@@ -324,8 +405,7 @@ public final class Engine {
 		results = new Object[codeLen];
 		if (!isRecursiveExec)
 			isInit = true;
-		iar:
-		for (int i = 0; i < 2; i++) {
+		iar: for (int i = 0; i < 2; i++) {
 			while (this.getCodeCount() <= codes.length) {
 				try {
 					if (isInit) {
@@ -334,11 +414,12 @@ public final class Engine {
 						results = ArrayUtils.addAll(results, this.run(codes[this.getCodeCount() - 1]));
 					}
 				} catch (Exception e) {
-					if (!(e instanceof KAsmException)) {
-						printFatalError(e);
-					} else {
+					if (e instanceof KAsmException) {
 						e.printStackTrace();
+						if(this._super != null) throw e;
 						break iar;
+					} else {
+						printFatalError(e);
 					}
 				}
 				if (isExit) {
@@ -347,6 +428,8 @@ public final class Engine {
 			}
 			if (!isRecursiveExec) {
 				isInit = false;
+				this.ScopeNotExecutionInfo.clear();
+				ScopeNotExecutionInfo.add(MutablePair.of(true,false));
 				this.initRegMap();
 			}
 
@@ -355,6 +438,22 @@ public final class Engine {
 						+ this.MultiLineCmdHeadStr.get(MultiLineCmdHeadStr.size() - 1), false, true);
 				break;
 			}
+			
+			if(this.notFoundedCommands.length > 0) {
+				int[] cmdNotFoundLines = new int[0];
+				for(int j = 0; j < this.notFoundedCommands.length; j++) {
+					if(this.commands.containsKey(this.notFoundedCommands[j])) {
+						cmdNotFoundLines = ArrayUtils.add(cmdNotFoundLines, j);
+					}
+				}
+				ArrayUtils.reverse(cmdNotFoundLines);
+				for(int line:cmdNotFoundLines) {
+					this.notFoundedCommands = ArrayUtils.remove(this.notFoundedCommands, line);
+				}
+				if(this.notFoundedCommands.length > 0)
+					throwError("Command not found.\nCommandName: " + notFoundedCommands[0]);
+			}
+			
 			this.setReg("C", GLOBAL_SCOPE, 1L, true);
 		}
 		if (!isRecursiveExec) {
@@ -370,8 +469,6 @@ public final class Engine {
 		return results;
 	}
 
-
-
 	/**
 	 * running command import from text file
 	 * @param file
@@ -379,8 +476,10 @@ public final class Engine {
 	 * @throws IOException
 	 */
 	public Object[] run(File file) throws IOException {
+		this.startingPath = file.toPath().getParent();
 		String[] codes = FileUtils.readLines(file, StandardCharsets.UTF_8).toArray(new String[0]);
 		Object[] results = this.run(codes);
+		this.startingPath = Paths.get(FileUtils.getUserDirectoryPath());
 		return results;
 	}
 
@@ -400,11 +499,20 @@ public final class Engine {
 			this.scope = this.saveScope;
 			errorLine--;
 		}
+		if(this.getSuper() != null) {
+			errorLine += this.getSuper().getCodeCount();
+		}
+		
 		if (this.isOutError) {
 			System.err.println("Error:" + errorMessage);
 			System.err.println("Code:" + (code ? this.code.trim() : "None"));
 			System.err.println("CmdName:" + (code ? commandname : "None"));
 			System.err.println("Line:" + (line ? errorLine : "None"));
+			System.err.println("isInit:" + isInit);
+			System.err.println("StackTrace:");
+			for(String traceEle:this.getErrorStackTrace()) {
+				System.err.println(traceEle);
+			}
 		}
 		this.lastErrorMessage = errorMessage;
 		this.lastErrorCode = this.code;
@@ -440,6 +548,17 @@ public final class Engine {
 		if (isRecursiveExec & this.saveReg != -1)
 			line = this.saveReg;
 		this.throwError(errorMessage, line);
+	}
+	
+	public String[] getErrorStackTrace() {
+		String[] res = new String[0];
+		if(this._super != null) {
+			res = ArrayUtils.addFirst(res,Integer.toString(this.getCodeCount()+this._super.getCodeCount()));
+			res = ArrayUtils.addAll(res,this._super.getErrorStackTrace());
+		}else {
+			res = ArrayUtils.addFirst(res,Integer.toString(this.getCodeCount()));
+		}
+		return res;
 	}
 
 	public String getLastErrorMessage() {
@@ -529,7 +648,7 @@ public final class Engine {
 
 	public void setReg(String index, int scope, Object value, boolean enforcement) {
 		Validate.isTrue(-1 <= scope);
-		Variable<?> Var = this.Regs.get(this.getMostNearVarScope(index), index);
+		Variable Var = this.Regs.get(this.getMostNearVarScope(index), index);
 
 		if (this.getRegChange(index, this.getMostNearVarScope(index)) || enforcement) {
 			Var.setValue(value);
@@ -644,6 +763,10 @@ public final class Engine {
 
 		this.addReg("C", Engine.GLOBAL_SCOPE, EnumVarType.Int, 1L);
 		this.setRegChange("C", Engine.GLOBAL_SCOPE, false);
+
+		for (Map.Entry<String, Variable> entry : this.defaultRegs.entrySet()) {
+			this.addReg(entry.getKey(), Engine.GLOBAL_SCOPE, entry.getValue().getType(),entry.getValue().getValue());
+		}
 	}
 
 	/**
@@ -656,7 +779,7 @@ public final class Engine {
 	}
 
 	public void addReg(String RegName, int scope, IVarType type, Object defaultValue) {
-		this.Regs.put(scope, RegName, new Variable<>(defaultValue));
+		this.Regs.put(scope, RegName, new Variable(defaultValue));
 		this.RegNames.add(RegName);
 	}
 
@@ -672,7 +795,7 @@ public final class Engine {
 		this.addReg(RegName, type, type.defaultVal());
 	}
 
-	public Table<Integer, String, Variable<?>> getRegs() {
+	public Table<Integer, String, Variable> getRegs() {
 		return HashBasedTable.create(Regs);
 	}
 
@@ -720,15 +843,27 @@ public final class Engine {
 	}
 
 	public boolean isExecution() {
-		return !ScopeNotExecutionInfo.contains(false);
+		return ScopeNotExecutionInfo.stream().allMatch(pair->pair.getLeft());
 	}
 
 	public boolean isLastExecution() {
-		return ScopeNotExecutionInfo.get(ScopeNotExecutionInfo.size() - 1);
+		return ScopeNotExecutionInfo.get(ScopeNotExecutionInfo.size() - 1).getLeft();
+	}
+	
+	public void setExecution(int scope, boolean bool) {
+		this.setExecution(scope,bool,false);
 	}
 
-	public void setExecution(int scope, boolean bool) {
-		this.ScopeNotExecutionInfo.set(scope + 1, bool);
+	public void setExecution(int scope, boolean bool, boolean nonSyntaxCheck) {
+		this.ScopeNotExecutionInfo.set(scope + 1, MutablePair.of(bool,bool?false:nonSyntaxCheck));
+	}
+	
+	public void setExecution(boolean bool) {
+		this.setExecution(this.getScope(),bool);
+	}
+	
+	public void setExecution(boolean bool, boolean nonSyntaxCheck) {
+		this.setExecution(this.getScope(),bool,nonSyntaxCheck);
 	}
 
 	public int getScope() {
@@ -761,7 +896,7 @@ public final class Engine {
 		for (char splitedArg : splitedArgs) {
 			if (!inQuatations) {
 				if (hold.length() >= 1) {
-					if ((hold.charAt(hold.length()-1)+(splitedArg+"")).equals("f:")) {
+					if ((hold.charAt(hold.length() - 1) + (splitedArg + "")).equals("f:")) {
 						nestedBoxesCount++;
 					}
 				}
@@ -769,7 +904,7 @@ public final class Engine {
 					if (splitedArg == ':' & (hold.charAt(hold.length() - 1) != 'f')) {
 						nestedBoxesCount--;
 					}
-				}else {
+				} else {
 					if (splitedArg == ':') {
 						nestedBoxesCount--;
 					}
@@ -787,17 +922,17 @@ public final class Engine {
 					continue;
 				}
 			}
-				if(splitedArg == ':' & !inNestedBoxes) {
-					if (!inQuatations) {
-						result.add(hold.trim()+splitedArg);
-						hold = "";
-						continue;
-					}
+			if (splitedArg == ':' & !inNestedBoxes) {
+				if (!inQuatations) {
+					result.add(hold.trim() + splitedArg);
+					hold = "";
+					continue;
 				}
-			
+			}
+
 			if (splitedArg == '"')
 				inQuatations = !inQuatations;
-			
+
 			hold += splitedArg;
 		}
 		if (!hold.isEmpty())
@@ -817,22 +952,97 @@ public final class Engine {
 		return arg.substring(0, 2).equals("f:") & arg.charAt(arg.length() - 1) == ':';
 	}
 	
+	public boolean isInMultilineCommand(String cmdName) {
+		return this.MultiLineCmdHeadStr.contains(cmdName);
+	}
+
+	public void copyEngineVariables(Engine parent) {
+		Table<Integer, String, Variable> Regs = HashBasedTable.create(parent.Regs);
+		Regs.put(Engine.GLOBAL_SCOPE, "C", this.Regs.get(Engine.GLOBAL_SCOPE, "C"));
+		this.Regs = Regs;
+
+		List<String> RegNames = Lists.newArrayList(parent.RegNames);
+		this.RegNames = RegNames;
+
+		Map<String, Integer> RegIDs = Maps.newHashMap(parent.RegIDs);
+		this.RegIDs = RegIDs;
+
+		this.commands = Maps.newHashMap(parent.commands);
+	}
 	
+	public Engine getSuper() {
+		return this._super;
+	}
+	
+	public String[] getSkipCommands() {
+		return this.skipCommands.toArray(new String[0]);
+	}
+	
+	public void addSkipCommand(String cmd) {
+		this.skipCommands.add(cmd);
+	}
+	
+	public void setSkipConditionReverse(boolean bool) {
+		this.skipConditionReverse = bool;
+	}
+
+	public boolean isSkipCommand(String cmd) {
+		boolean contains = this.skipCommands.contains(cmd);
+		return this.skipConditionReverse ? !contains : contains;
+	}
+	
+	public void setBasePath(Path basePath) {
+		this.startingPath = basePath;
+	}
+	
+	public Map<String, ICommand> loadFunctionFromOtherFile(File file) {
+		return this.loadFunctionFromOtherAbsolutePathFile(new File(this.startingPath.resolve(file.toPath()).toString()));
+	}
+	
+	public Map<String, ICommand> loadFunctionFromOtherAbsolutePathFile(File file) {
+		//if(!file.isAbsolute()) return;
+		Engine executer = Engine.createExecuter(this, null);
+		executer.addSkipCommand("function");
+		executer.addSkipCommand("endfunc");
+		executer.addSkipCommand("nativefunc");
+		executer.setSkipConditionReverse(true);
+		try {
+			executer.run(file);
+		} catch (KAsmException e) {
+			return Maps.newHashMap();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		Map<String, ICommand> loadedCmds = Maps.newHashMap();
+	
+		Map<String, ICommand> commands = ((CommandFUNCTION)executer.getCommand("function")).funcCommands;
+		for (Map.Entry<String, ICommand> entry : commands.entrySet()) {
+			this.registerCommand(entry.getKey(), entry.getValue());
+			loadedCmds.put(entry.getKey(), entry.getValue());
+		}
+		
+		commands = ((CommandNATIVEFUNC)executer.getCommand("nativefunc")).makedCommands;
+		for (Map.Entry<String, ICommand> entry : commands.entrySet()) {
+			this.registerCommand(entry.getKey(), entry.getValue());
+			loadedCmds.put(entry.getKey(), entry.getValue());
+		}
+		return loadedCmds;
+	}
 	
 	/*============================== Engine Running Refactoring Methods ==============================*/
-	
-	
+
 	private Object runProcessing(ICommand command, Object[] Args, IVarType[] types, IVarType[] argTypes,
 			Object result) {
-		if (command instanceof CommandMultiLine & !(command instanceof CommandEndMultiLine)) {
-			this.ScopeNotExecutionInfo.add(true);
+		if (command instanceof CommandMultiLine && !(command instanceof CommandEndMultiLine)) {
+			this.ScopeNotExecutionInfo.add(MutablePair.of(true,false));
 			this.MultiLineCmdHeadStr.add(this.commandname);
 			this.scope++;
 		}
 
 		result = running(command, Args, types, argTypes, result);
 
-		if (command instanceof IEndCommand & !(command instanceof CommandEndMultiLine)) {
+		if (command instanceof IEndCommand && !(command instanceof CommandEndMultiLine)) {
 			this.ScopeNotExecutionInfo.remove(ScopeNotExecutionInfo.size() - 1);
 			this.MultiLineCmdHeadStr.remove(this.MultiLineCmdHeadStr.size() - 1);
 			this.Regs.row(this.scope).clear();
@@ -841,6 +1051,7 @@ public final class Engine {
 
 		if (command instanceof CommandEndMultiLine) {
 			this.MultiLineCmdHeadStr.remove(this.MultiLineCmdHeadStr.size() - 1);
+			this.Regs.row(this.scope).clear();
 			this.MultiLineCmdHeadStr.add(this.commandname);
 		}
 		return result;
@@ -862,10 +1073,10 @@ public final class Engine {
 		return result;
 	}
 
-	private Object initRunning(ICommand command, Object[] Args, IVarType[] types, Object result) {
+	private Object initRunning(ICommand command, Object[] Args, IVarType[] types, IVarType[] argTypes, Object result) {
 		initMultiLineCmdFieldProcessing(command);
 
-		command.initRun(Args, this, Args.length);
+		command.initRun(Args, this, argTypes, Args.length);
 		result = command.getReturnVarType(types,
 				result == null ? EnumVarType.Void : VariableTypeUtils.toEnumVarType(result), this,
 				runCount).defaultVal();
@@ -910,7 +1121,7 @@ public final class Engine {
 			} else {
 				throwError("This variable cannot be referenced.");
 			}
-		}else if(ArrayUtils.contains(convlocation, index)) {
+		} else if (ArrayUtils.contains(convlocation, index)) {
 			this.throwError("This argument must specify a variable that exists.");
 		}
 	}
@@ -941,20 +1152,44 @@ public final class Engine {
 			if (Engine.isNestedFunction(strArr[i])) {
 
 				boolean isMostUpper = !isRecursiveExec;
+				boolean saveIsInit = this.isInit;
+				List<Pair<Boolean,Boolean>> saveScopeNotExecutionInfo = Lists.newArrayList(this.ScopeNotExecutionInfo);
 				if (isMostUpper) {
 					this.saveCode = this.code;
 					this.saveCmdName = this.commandname;
 					this.saveScope = this.scope;
 					this.isRecursiveExec = true;
+					this.ScopeNotExecutionInfo.clear();
+					this.ScopeNotExecutionInfo.add(MutablePair.of(true,false));
+					//this.isInit = false;
 				}
 				Object results[] = this.run(strArr[i].substring(2, (strArr[i].length() - 1)));
-				if (isMostUpper)
+ 				if (isMostUpper) {
 					this.isRecursiveExec = false;
+ 				}
 
 				this.code = this.saveCode;
 				this.commandname = this.saveCmdName;
 				this.scope = this.saveScope;
+				this.isInit = saveIsInit;
+				this.ScopeNotExecutionInfo = saveScopeNotExecutionInfo;
 				this.setReg("C", GLOBAL_SCOPE, this.getCodeCount() - 1, true);
+				
+				if(this.notFoundedCommands.length > 0) {
+					int[] cmdNotFoundLines = new int[0];
+					for(int j = 0; j < this.notFoundedCommands.length; j++) {
+						if(this.commands.containsKey(this.notFoundedCommands[j])) {
+							cmdNotFoundLines = ArrayUtils.add(cmdNotFoundLines, j);
+						}
+					}
+					ArrayUtils.reverse(cmdNotFoundLines);
+					for(int line:cmdNotFoundLines) {
+						this.notFoundedCommands = ArrayUtils.remove(this.notFoundedCommands, line);
+					}
+					if(this.notFoundedCommands.length > 0) {
+						throwError("Command not found.\nCommandName: " + notFoundedCommands[0]);
+					}
+				}
 
 				if (results.length <= 0) {
 					throwError("Commands with a return value of void cannot be used for nested systems.");
@@ -968,7 +1203,7 @@ public final class Engine {
 		return strArr;
 	}
 
-	private String[] removeBlank(String[] StrArr) {
+	private static String[] removeBlank(String[] StrArr) {
 		while (CmdStrUtil.containsBlank(StrArr)) {
 			StrArr = ArrayUtils.remove(StrArr, CmdStrUtil.indexOfBlank(StrArr));
 		}
@@ -985,13 +1220,13 @@ public final class Engine {
 	}
 
 	private void initMultiLineCmdFieldProcessing(ICommand command) {
-		if (command instanceof CommandMultiLine & !(command instanceof CommandEndMultiLine)) {
-			this.ScopeNotExecutionInfo.add(true);
+		if (command instanceof CommandMultiLine && !(command instanceof CommandEndMultiLine)) {
+			this.ScopeNotExecutionInfo.add(MutablePair.of(true,false));
 			this.MultiLineCmdHeadStr.add(this.commandname);
 			this.scope++;
 		}
 
-		if (command instanceof IEndCommand & !(command instanceof CommandEndMultiLine)) {
+		if (command instanceof IEndCommand && !(command instanceof CommandEndMultiLine)) {
 			this.ScopeNotExecutionInfo.remove(this.ScopeNotExecutionInfo.size() - 1);
 
 			if (this.MultiLineCmdHeadStr.size() < 1)
@@ -1015,20 +1250,20 @@ public final class Engine {
 			this.MultiLineCmdHeadStr.add(this.commandname);
 		}
 	}
-	
-	
 
-	private String cutComment(String code) {
-		if (code.contains("#")) {
-			if (StringUtils.countMatches(code, '#') >= 2) {
-				code = code.substring(0, code.indexOf("#")) + code.substring(code.lastIndexOf("#") + 1);
+	private static String cutComment(String code) {
+		int first = StringQuotationUtils.indexOfNotInQuoted(code, "#");
+		int last = StringQuotationUtils.lastIndexOfNotInQuoted(code, "#");
+		if (first != -1) {
+			if (first != last && last != -1) {
+				code = code.substring(0, first) + code.substring(last + 1);
 			} else {
-				code = code.substring(0, code.indexOf("#"));
+				code = code.substring(0, first);
 			}
 		}
 		return code;
 	}
-	
+
 	private void printFatalError(Exception e) {
 		boolean available = true;
 
@@ -1061,7 +1296,7 @@ public final class Engine {
 
 		e.printStackTrace();
 
-		System.exit(0);
+		System.exit(1);
 	}
 
 }

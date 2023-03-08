@@ -13,6 +13,7 @@ public class Tester {
 		//System.exit(0);
 	}
 	
+	@SuppressWarnings("unused")
 	private static Object[] runTestScript() {
 		Engine engine = new Engine();
 		Object[] result = new Object[0];
@@ -20,8 +21,12 @@ public class Tester {
 		try {
 			//result = engine.run(new File("src/test/testcode.txt"));
 			//result = engine.run(new File("src/test/Fibonacci.txt"));
-			result = engine.run(new File("src/test/test_IF.txt"));
+			//result = engine.run(new File("src/test/test_IF.txt"));
+			//result = engine.run(new File("src/test/Manju.txt"));
+			//result = engine.run(new File("src/test/train_bus.txt"));
+			result = engine.run(new File("src/test/functiontest.txt"));
 			//result = engine.run(new File("src/test/Fibonacci.txt"));
+			//result = engine.run(new File("src/test/alphabet.txt"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,9 +38,10 @@ public class Tester {
 	private static void debugPrint() {
 		//System.out.println(Arrays.toString(Engine.splitNonQuoted("こんちは〜っす;\"hello !! ; !!!!!\"ほいじゃ;んじゃ;;;",";")));
 		//System.out.println(ArrayUtils.contains(new EnumVarType[] {EnumVarType.Int, EnumVarType.Float, EnumVarType.String, EnumVarType.Boolean}, EnumVarType.String));
-		String arg = "f:sgsasegase:";
+		//String arg = "f:sgsasegase:";
 		//System.out.println(isNestedFunction(arg));
 		//System.out.println(VariableTypeUtils.ParseType("1").toString());
+		//System.out.println(StringQuotationUtils.isInQuatations("dsp \"#test\"", 7));
 	}
 	
 	private static boolean isNestedFunction(String arg) {
